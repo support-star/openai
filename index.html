@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zeiterfassung – Heizungsprojekt</title>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        font-family: Inter, Arial, sans-serif;
+        margin: 0;
+        background: #0b1220;
+        color: #e8eefc;
+      }
+      .wrap { max-width: 960px; margin: 0 auto; padding: 24px; }
+      .card {
+        background: #121b2f;
+        border: 1px solid #26334f;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      h1, h2 { margin-top: 0; }
+      label { display:block; margin-bottom: 6px; font-size: 14px; color:#aab6d6; }
+      input, select, button {
+        border-radius: 8px;
+        border: 1px solid #34486f;
+        background: #0f1729;
+        color: #eff4ff;
+        padding: 10px;
+        font-size: 15px;
+      }
+      .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 10px; align-items: end; }
+      button { cursor: pointer; }
+      button.primary { background: #2a63ff; border-color: #2a63ff; }
+      button.warn { background:#7b2d2d; border-color:#a04747; }
+      button.good { background:#1f6d41; border-color:#2f9860; }
+      .status { font-size: 14px; color:#9dd7ac; margin-top: 8px; }
+      table { width:100%; border-collapse: collapse; }
+      th, td { text-align:left; border-bottom:1px solid #273552; padding:8px 4px; font-size:14px; }
+      .muted { color:#9dadcd; font-size: 13px; }
+      .chips { display:flex; gap:8px; flex-wrap:wrap; }
+      .chip { background:#1a2743; border:1px solid #2c4168; border-radius:999px; padding:4px 10px; font-size:12px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>Mitarbeiter-Zeiterfassung</h1>
+      <p class="muted">Login mit Mitarbeiter-Nummer (10 Nutzer) + 4-stelligem Code. Zeiten werden in Arbeitszeit und Pausenzeit getrennt und einem Projekt zugeordnet.</p>
+
+      <section class="card" id="loginCard">
+        <h2>Login</h2>
+        <div class="row">
+          <div>
+            <label for="employeeId">Mitarbeiter-Nr.</label>
+            <select id="employeeId"></select>
+          </div>
+          <div>
+            <label for="pin">4-stelliger Code</label>
+            <input id="pin" maxlength="4" inputmode="numeric" placeholder="z. B. 1234" />
+          </div>
+          <div>
+            <button id="loginBtn" class="primary">Einloggen</button>
+          </div>
+        </div>
+        <div id="loginStatus" class="status"></div>
+      </section>
+
+      <section class="card" id="trackerCard" hidden>
+        <h2>Zeiterfassung</h2>
+        <div class="chips">
+          <div class="chip" id="userChip">-</div>
+          <div class="chip" id="modeChip">Status: Inaktiv</div>
+        </div>
+        <br/>
+        <div class="row">
+          <div>
+            <label for="project">Projekt</label>
+            <select id="project">
+              <option>Heizzentrale Nord</option>
+              <option>Objekt Grünerweg 19</option>
+              <option>Wohnpark Süd</option>
+              <option>Service & Wartung</option>
+            </select>
+          </div>
+          <div><button id="startWork" class="good">Arbeitszeit starten</button></div>
+          <div><button id="startBreak" class="warn">Pause starten</button></div>
+          <div><button id="stopBtn">Stopp / Segment beenden</button></div>
+        </div>
+        <p id="trackStatus" class="status"></p>
+      </section>
+
+      <section class="card">
+        <h2>Gespeicherte Einträge</h2>
+        <button id="exportBtn">CSV Export</button>
+        <table>
+          <thead>
+            <tr>
+              <th>Datum</th><th>Mitarbeiter</th><th>Projekt</th><th>Typ</th><th>Von</th><th>Bis</th><th>Dauer (min)</th>
+            </tr>
+          </thead>
+          <tbody id="logBody"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <script>
+      const employees = [
+        { id: '1001', name: 'Mitarbeiter 1', pin: '1111' },
+        { id: '1002', name: 'Mitarbeiter 2', pin: '2222' },
+        { id: '1003', name: 'Mitarbeiter 3', pin: '3333' },
+        { id: '1004', name: 'Mitarbeiter 4', pin: '4444' },
+        { id: '1005', name: 'Mitarbeiter 5', pin: '5555' },
+        { id: '1006', name: 'Mitarbeiter 6', pin: '6666' },
+        { id: '1007', name: 'Mitarbeiter 7', pin: '7777' },
+        { id: '1008', name: 'Mitarbeiter 8', pin: '8888' },
+        { id: '1009', name: 'Mitarbeiter 9', pin: '9999' },
+        { id: '1010', name: 'Mitarbeiter 10', pin: '1010' },
+      ];
+
+      const storageKey = 'zeitlog-v1';
+      const sessionKey = 'zeitsession-v1';
+
+      const employeeId = document.getElementById('employeeId');
+      const pinInput = document.getElementById('pin');
+      const loginBtn = document.getElementById('loginBtn');
+      const loginStatus = document.getElementById('loginStatus');
+      const trackerCard = document.getElementById('trackerCard');
+      const userChip = document.getElementById('userChip');
+      const modeChip = document.getElementById('modeChip');
+      const trackStatus = document.getElementById('trackStatus');
+      const projectSelect = document.getElementById('project');
+      const logBody = document.getElementById('logBody');
+
+      const session = {
+        user: null,
+        activeSegment: null,
+      };
+
+      employees.forEach((e) => {
+        const o = document.createElement('option');
+        o.value = e.id;
+        o.textContent = `${e.id} – ${e.name}`;
+        employeeId.appendChild(o);
+      });
+
+      function getLogs() {
+        return JSON.parse(localStorage.getItem(storageKey) || '[]');
+      }
+
+      function setLogs(logs) {
+        localStorage.setItem(storageKey, JSON.stringify(logs));
+      }
+
+      function saveSession() {
+        localStorage.setItem(sessionKey, JSON.stringify(session));
+      }
+
+      function renderLogs() {
+        const logs = getLogs().sort((a,b) => b.start - a.start);
+        logBody.innerHTML = '';
+        logs.forEach((l) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${new Date(l.start).toLocaleDateString('de-DE')}</td>
+            <td>${l.employeeId}</td>
+            <td>${l.project}</td>
+            <td>${l.type}</td>
+            <td>${new Date(l.start).toLocaleTimeString('de-DE')}</td>
+            <td>${new Date(l.end).toLocaleTimeString('de-DE')}</td>
+            <td>${Math.round((l.end - l.start) / 60000)}</td>
+          `;
+          logBody.appendChild(tr);
+        });
+      }
+
+      function updateTrackerUI() {
+        if (!session.user) {
+          trackerCard.hidden = true;
+          return;
+        }
+        trackerCard.hidden = false;
+        userChip.textContent = `${session.user.id} – ${session.user.name}`;
+        const mode = session.activeSegment?.type || 'Inaktiv';
+        modeChip.textContent = `Status: ${mode}`;
+      }
+
+      loginBtn.addEventListener('click', () => {
+        const selected = employees.find((e) => e.id === employeeId.value);
+        if (!selected) return;
+        if (!/^\d{4}$/.test(pinInput.value)) {
+          loginStatus.textContent = 'Code muss 4-stellig sein.';
+          return;
+        }
+        if (pinInput.value !== selected.pin) {
+          loginStatus.textContent = 'Falscher Login-Code.';
+          return;
+        }
+        session.user = selected;
+        loginStatus.textContent = `Erfolgreich eingeloggt: ${selected.name}`;
+        pinInput.value = '';
+        saveSession();
+        updateTrackerUI();
+      });
+
+      function beginSegment(type) {
+        if (!session.user) {
+          trackStatus.textContent = 'Bitte zuerst einloggen.';
+          return;
+        }
+        if (session.activeSegment) {
+          trackStatus.textContent = 'Bitte aktuelles Segment zuerst stoppen.';
+          return;
+        }
+        session.activeSegment = {
+          type,
+          project: projectSelect.value,
+          start: Date.now(),
+        };
+        trackStatus.textContent = `${type} gestartet (${session.activeSegment.project}).`;
+        saveSession();
+        updateTrackerUI();
+      }
+
+      document.getElementById('startWork').addEventListener('click', () => beginSegment('Arbeitszeit'));
+      document.getElementById('startBreak').addEventListener('click', () => beginSegment('Pausenzeit'));
+
+      document.getElementById('stopBtn').addEventListener('click', () => {
+        if (!session.activeSegment || !session.user) {
+          trackStatus.textContent = 'Kein laufendes Segment.';
+          return;
+        }
+        const end = Date.now();
+        const logs = getLogs();
+        logs.push({
+          employeeId: session.user.id,
+          project: session.activeSegment.project,
+          type: session.activeSegment.type,
+          start: session.activeSegment.start,
+          end,
+        });
+        setLogs(logs);
+        trackStatus.textContent = `${session.activeSegment.type} beendet und gespeichert.`;
+        session.activeSegment = null;
+        saveSession();
+        updateTrackerUI();
+        renderLogs();
+      });
+
+      document.getElementById('exportBtn').addEventListener('click', () => {
+        const rows = getLogs();
+        const csv = [
+          'employeeId,project,type,start,end,durationMinutes',
+          ...rows.map((r) => `${r.employeeId},${r.project},${r.type},${new Date(r.start).toISOString()},${new Date(r.end).toISOString()},${Math.round((r.end-r.start)/60000)}`),
+        ].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'zeiterfassung.csv';
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      (() => {
+        const saved = JSON.parse(localStorage.getItem(sessionKey) || 'null');
+        if (saved) {
+          session.user = saved.user;
+          session.activeSegment = saved.activeSegment;
+        }
+        updateTrackerUI();
+        renderLogs();
+      })();
+    </script>
+  </body>
+</html>
