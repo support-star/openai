@@ -1,0 +1,162 @@
+{
+  "name": "Zeiterfassung Telegram Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": ["message"],
+        "additionalFields": {}
+      },
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [250, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIALS_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Telegram-Nachricht parsen\nconst message = $input.first().json.message;\nconst text = message.text || '';\nconst telegramId = message.from.id;\nconst chatId = message.chat.id;\n\n// Befehl und Text trennen\nconst parts = text.split(' ');\nconst command = parts[0].toLowerCase();\nconst argText = parts.slice(1).join(' ');\n\n// Registrierung separat behandeln\nif (command === '/registrieren') {\n  const personalNr = parts[1] || '';\n  const pin = parts[2] || '';\n  return [{\n    json: {\n      telegram_id: telegramId,\n      chat_id: chatId,\n      command: '/registrieren',\n      personal_nr: personalNr,\n      pin: pin,\n      text: argText\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    telegram_id: telegramId,\n    chat_id: chatId,\n    command: command,\n    text: argText\n  }\n}];"
+      },
+      "id": "parse-message",
+      "name": "Nachricht parsen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.command }}",
+              "rightValue": "/registrieren",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        }
+      },
+      "id": "is-registration",
+      "name": "Registrierung?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:3000/api/auth/register-telegram",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "personal_nr", "value": "={{ $json.personal_nr }}" },
+            { "name": "pin", "value": "={{ $json.pin }}" },
+            { "name": "telegram_id", "value": "={{ $json.telegram_id }}" }
+          ]
+        }
+      },
+      "id": "register-telegram",
+      "name": "Telegram registrieren",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [910, 200]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:3000/api/webhooks/telegram",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "telegram_id", "value": "={{ $json.telegram_id }}" },
+            { "name": "command", "value": "={{ $json.command }}" },
+            { "name": "text", "value": "={{ $json.text }}" }
+          ]
+        }
+      },
+      "id": "process-command",
+      "name": "Befehl verarbeiten",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [910, 400]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Nachricht parsen').first().json.chat_id }}",
+        "text": "={{ $json.data?.success ? 'Erfolgreich registriert! Sende /hilfe für Befehle.' : 'Registrierung fehlgeschlagen. Prüfe Personalnummer und PIN.' }}",
+        "additionalFields": {}
+      },
+      "id": "reply-registration",
+      "name": "Registrierung Antwort",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1130, 200],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIALS_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Nachricht parsen').first().json.chat_id }}",
+        "text": "={{ $json.data?.antwort || 'Ein Fehler ist aufgetreten.' }}",
+        "additionalFields": {}
+      },
+      "id": "reply-command",
+      "name": "Befehl Antwort",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1130, 400],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIALS_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [{ "node": "Nachricht parsen", "type": "main", "index": 0 }]
+      ]
+    },
+    "Nachricht parsen": {
+      "main": [
+        [{ "node": "Registrierung?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Registrierung?": {
+      "main": [
+        [{ "node": "Telegram registrieren", "type": "main", "index": 0 }],
+        [{ "node": "Befehl verarbeiten", "type": "main", "index": 0 }]
+      ]
+    },
+    "Telegram registrieren": {
+      "main": [
+        [{ "node": "Registrierung Antwort", "type": "main", "index": 0 }]
+      ]
+    },
+    "Befehl verarbeiten": {
+      "main": [
+        [{ "node": "Befehl Antwort", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin"
+  }
+}

@@ -1,0 +1,143 @@
+{
+  "name": "Tagesbericht (täglich 18:00)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 18 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "cron-trigger",
+      "name": "Täglich 18 Uhr (Mo-Fr)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:3000/api/webhooks/n8n-notify",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "type", "value": "tagesbericht" }
+          ]
+        }
+      },
+      "id": "get-report",
+      "name": "Tagesbericht abrufen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [470, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:3000/api/webhooks/n8n-notify",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "type", "value": "offene_sessions" }
+          ]
+        }
+      },
+      "id": "check-open",
+      "name": "Offene Sessions prüfen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [470, 500]
+    },
+    {
+      "parameters": {
+        "chatId": "ADMIN_CHAT_ID",
+        "text": "=📊 Tagesbericht {{ new Date().toLocaleDateString('de-DE') }}\n\n{{ $json.data?.nachricht || 'Keine Daten für heute.' }}",
+        "additionalFields": {}
+      },
+      "id": "send-report",
+      "name": "Bericht an Admin senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [690, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIALS_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.data?.offene?.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        }
+      },
+      "id": "has-open-sessions",
+      "name": "Offene Sessions?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [690, 500]
+    },
+    {
+      "parameters": {
+        "chatId": "ADMIN_CHAT_ID",
+        "text": "=⚠️ Offene Sessions:\n\n{{ $json.data?.nachricht }}",
+        "additionalFields": {}
+      },
+      "id": "warn-open",
+      "name": "Warnung senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [910, 450],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIALS_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Täglich 18 Uhr (Mo-Fr)": {
+      "main": [
+        [
+          { "node": "Tagesbericht abrufen", "type": "main", "index": 0 },
+          { "node": "Offene Sessions prüfen", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Tagesbericht abrufen": {
+      "main": [
+        [{ "node": "Bericht an Admin senden", "type": "main", "index": 0 }]
+      ]
+    },
+    "Offene Sessions prüfen": {
+      "main": [
+        [{ "node": "Offene Sessions?", "type": "main", "index": 0 }]
+      ]
+    },
+    "Offene Sessions?": {
+      "main": [
+        [{ "node": "Warnung senden", "type": "main", "index": 0 }],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin"
+  }
+}

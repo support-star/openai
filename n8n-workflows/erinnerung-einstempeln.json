@@ -1,0 +1,89 @@
+{
+  "name": "Erinnerung: Einstempeln (Mo-Fr 07:00)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "morning-trigger",
+      "name": "Morgens 07:00 (Mo-Fr)",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT m.telegram_id, m.name FROM mitarbeiter m WHERE m.aktiv = TRUE AND m.telegram_id IS NOT NULL AND m.id NOT IN (SELECT mitarbeiter_id FROM zeitlog WHERE start_zeit::DATE = CURRENT_DATE AND typ = 'arbeit')"
+      },
+      "id": "find-not-clocked",
+      "name": "Nicht eingestempelt finden",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [470, 300],
+      "credentials": {
+        "postgres": {
+          "id": "POSTGRES_CREDENTIALS_ID",
+          "name": "Zeiterfassung DB"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "loop-workers",
+      "name": "Pro Mitarbeiter",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [690, 300]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegram_id }}",
+        "text": "=Guten Morgen {{ $json.name }}! Vergiss nicht, dich einzustempeln. Sende /einstempeln um loszulegen.",
+        "additionalFields": {}
+      },
+      "id": "send-reminder",
+      "name": "Erinnerung senden",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [910, 300],
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIALS_ID",
+          "name": "Telegram Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Morgens 07:00 (Mo-Fr)": {
+      "main": [
+        [{ "node": "Nicht eingestempelt finden", "type": "main", "index": 0 }]
+      ]
+    },
+    "Nicht eingestempelt finden": {
+      "main": [
+        [{ "node": "Pro Mitarbeiter", "type": "main", "index": 0 }]
+      ]
+    },
+    "Pro Mitarbeiter": {
+      "main": [
+        [{ "node": "Erinnerung senden", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin"
+  }
+}
