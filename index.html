@@ -6,6 +6,7 @@
     <title>Zeiterfassung – Heizungsprojekt</title>
     <style>
       :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
       body {
         font-family: Inter, Arial, sans-serif;
         margin: 0;
@@ -29,24 +30,97 @@
         color: #eff4ff;
         padding: 10px;
         font-size: 15px;
+        width: 100%;
       }
       .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 10px; align-items: end; }
-      button { cursor: pointer; }
+      button { cursor: pointer; width: auto; }
       button.primary { background: #2a63ff; border-color: #2a63ff; }
       button.warn { background:#7b2d2d; border-color:#a04747; }
       button.good { background:#1f6d41; border-color:#2f9860; }
+      button.danger { background:#991b1b; border-color:#dc2626; font-size: 12px; padding: 6px 10px; }
+      button.logout { background:#4a3b6b; border-color:#7c5fad; }
       .status { font-size: 14px; color:#9dd7ac; margin-top: 8px; }
+      .status.error { color: #f87171; }
       table { width:100%; border-collapse: collapse; }
       th, td { text-align:left; border-bottom:1px solid #273552; padding:8px 4px; font-size:14px; }
       .muted { color:#9dadcd; font-size: 13px; }
-      .chips { display:flex; gap:8px; flex-wrap:wrap; }
+      .chips { display:flex; gap:8px; flex-wrap:wrap; align-items: center; }
       .chip { background:#1a2743; border:1px solid #2c4168; border-radius:999px; padding:4px 10px; font-size:12px; }
+      .chip.active { background:#1f3a1f; border-color:#2f9860; animation: pulse 2s infinite; }
+      .timer-display {
+        font-size: 24px;
+        font-weight: bold;
+        color: #5eead4;
+        font-variant-numeric: tabular-nums;
+        margin: 12px 0;
+      }
+      .header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .timeout-warning {
+        background: #7b2d2d;
+        border: 1px solid #a04747;
+        border-radius: 8px;
+        padding: 10px 16px;
+        margin-bottom: 16px;
+        font-size: 14px;
+        display: none;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+      }
+      @media (max-width: 600px) {
+        .wrap { padding: 12px; }
+        .row { grid-template-columns: 1fr; }
+        .header-row { flex-direction: column; align-items: flex-start; }
+        table { font-size: 12px; }
+        th, td { padding: 6px 2px; }
+        .timer-display { font-size: 20px; }
+        .card { padding: 12px; }
+        h1 { font-size: 20px; }
+      }
+      .table-scroll { overflow-x: auto; }
+      .confirm-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
+      .confirm-box {
+        background: #121b2f;
+        border: 1px solid #26334f;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 360px;
+        text-align: center;
+      }
+      .confirm-box .btn-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 16px;
+      }
     </style>
   </head>
   <body>
     <div class="wrap">
-      <h1>Mitarbeiter-Zeiterfassung</h1>
-      <p class="muted">Login mit Mitarbeiter-Nummer (10 Nutzer) + 4-stelligem Code. Zeiten werden in Arbeitszeit und Pausenzeit getrennt und einem Projekt zugeordnet.</p>
+      <div class="header-row">
+        <h1>Mitarbeiter-Zeiterfassung</h1>
+        <button id="logoutBtn" class="logout" hidden>Abmelden</button>
+      </div>
+      <p class="muted">Login mit Mitarbeiter-Nummer + 4-stelligem Code. Zeiten werden in Arbeitszeit und Pausenzeit getrennt und einem Projekt zugeordnet.</p>
+
+      <div id="timeoutWarning" class="timeout-warning">
+        Ihre Sitzung wird in <span id="timeoutCountdown">--</span> wegen Inaktivität automatisch beendet.
+      </div>
 
       <section class="card" id="loginCard">
         <h2>Login</h2>
@@ -57,7 +131,7 @@
           </div>
           <div>
             <label for="pin">4-stelliger Code</label>
-            <input id="pin" maxlength="4" inputmode="numeric" placeholder="z. B. 1234" />
+            <input id="pin" type="password" maxlength="4" inputmode="numeric" placeholder="z. B. 1234" />
           </div>
           <div>
             <button id="loginBtn" class="primary">Einloggen</button>
@@ -72,7 +146,9 @@
           <div class="chip" id="userChip">-</div>
           <div class="chip" id="modeChip">Status: Inaktiv</div>
         </div>
-        <br/>
+        <div id="timerContainer" hidden>
+          <div class="timer-display" id="timerDisplay">00:00:00</div>
+        </div>
         <div class="row">
           <div>
             <label for="project">Projekt</label>
@@ -80,7 +156,7 @@
               <option>Heizzentrale Nord</option>
               <option>Objekt Grünerweg 19</option>
               <option>Wohnpark Süd</option>
-              <option>Service & Wartung</option>
+              <option>Service &amp; Wartung</option>
             </select>
           </div>
           <div><button id="startWork" class="good">Arbeitszeit starten</button></div>
@@ -91,20 +167,38 @@
       </section>
 
       <section class="card">
-        <h2>Gespeicherte Einträge</h2>
-        <button id="exportBtn">CSV Export</button>
-        <table>
-          <thead>
-            <tr>
-              <th>Datum</th><th>Mitarbeiter</th><th>Projekt</th><th>Typ</th><th>Von</th><th>Bis</th><th>Dauer (min)</th>
-            </tr>
-          </thead>
-          <tbody id="logBody"></tbody>
-        </table>
+        <div class="header-row">
+          <h2>Gespeicherte Einträge</h2>
+          <button id="exportBtn" class="primary" style="width:auto">CSV Export</button>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Datum</th><th>Mitarbeiter</th><th>Projekt</th><th>Typ</th><th>Von</th><th>Bis</th><th>Dauer (min)</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="logBody"></tbody>
+          </table>
+        </div>
       </section>
     </div>
 
+    <div id="confirmOverlay" class="confirm-overlay" hidden>
+      <div class="confirm-box">
+        <p id="confirmMessage">Sind Sie sicher?</p>
+        <div class="btn-row">
+          <button id="confirmYes" class="warn">Ja</button>
+          <button id="confirmNo" class="primary">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+
     <script>
+      /* ──────────────── Mitarbeiterdaten ──────────────── */
+      /* HINWEIS: In einer produktiven Umgebung sollten PINs
+         serverseitig gehasht und validiert werden.
+         Dieses MVP speichert PINs im Frontend nur zu Demo-Zwecken. */
       const employees = [
         { id: '1001', name: 'Mitarbeiter 1', pin: '1111' },
         { id: '1002', name: 'Mitarbeiter 2', pin: '2222' },
@@ -118,34 +212,60 @@
         { id: '1010', name: 'Mitarbeiter 10', pin: '1010' },
       ];
 
+      /* ──────────────── Konstanten ──────────────── */
       const storageKey = 'zeitlog-v1';
       const sessionKey = 'zeitsession-v1';
+      const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 Minuten
+      const TIMEOUT_WARNING_MS = 5 * 60 * 1000;  // Warnung 5 Min vorher
 
+      /* ──────────────── DOM-Referenzen ──────────────── */
       const employeeId = document.getElementById('employeeId');
       const pinInput = document.getElementById('pin');
       const loginBtn = document.getElementById('loginBtn');
       const loginStatus = document.getElementById('loginStatus');
+      const loginCard = document.getElementById('loginCard');
       const trackerCard = document.getElementById('trackerCard');
       const userChip = document.getElementById('userChip');
       const modeChip = document.getElementById('modeChip');
       const trackStatus = document.getElementById('trackStatus');
       const projectSelect = document.getElementById('project');
       const logBody = document.getElementById('logBody');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const timerContainer = document.getElementById('timerContainer');
+      const timerDisplay = document.getElementById('timerDisplay');
+      const timeoutWarning = document.getElementById('timeoutWarning');
+      const timeoutCountdown = document.getElementById('timeoutCountdown');
+      const confirmOverlay = document.getElementById('confirmOverlay');
+      const confirmMessage = document.getElementById('confirmMessage');
+      const confirmYes = document.getElementById('confirmYes');
+      const confirmNo = document.getElementById('confirmNo');
 
+      /* ──────────────── Session-State ──────────────── */
       const session = {
         user: null,
         activeSegment: null,
+        lastActivity: Date.now(),
       };
 
+      let timerInterval = null;
+      let timeoutInterval = null;
+      let confirmCallback = null;
+
+      /* ──────────────── Dropdown befüllen ──────────────── */
       employees.forEach((e) => {
         const o = document.createElement('option');
         o.value = e.id;
-        o.textContent = `${e.id} – ${e.name}`;
+        o.textContent = e.id + ' – ' + e.name;
         employeeId.appendChild(o);
       });
 
+      /* ──────────────── Hilfsfunktionen ──────────────── */
       function getLogs() {
-        return JSON.parse(localStorage.getItem(storageKey) || '[]');
+        try {
+          return JSON.parse(localStorage.getItem(storageKey) || '[]');
+        } catch {
+          return [];
+        }
       }
 
       function setLogs(logs) {
@@ -156,53 +276,239 @@
         localStorage.setItem(sessionKey, JSON.stringify(session));
       }
 
+      function sanitize(str) {
+        if (typeof str !== 'string') return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      function formatDuration(ms) {
+        const totalSec = Math.floor(ms / 1000);
+        const h = Math.floor(totalSec / 3600);
+        const m = Math.floor((totalSec % 3600) / 60);
+        const s = totalSec % 60;
+        return String(h).padStart(2, '0') + ':' +
+               String(m).padStart(2, '0') + ':' +
+               String(s).padStart(2, '0');
+      }
+
+      /* ──────────────── Bestätigungsdialog ──────────────── */
+      function showConfirm(message) {
+        return new Promise((resolve) => {
+          confirmMessage.textContent = message;
+          confirmOverlay.hidden = false;
+          confirmCallback = resolve;
+        });
+      }
+
+      confirmYes.addEventListener('click', () => {
+        confirmOverlay.hidden = true;
+        if (confirmCallback) confirmCallback(true);
+        confirmCallback = null;
+      });
+
+      confirmNo.addEventListener('click', () => {
+        confirmOverlay.hidden = true;
+        if (confirmCallback) confirmCallback(false);
+        confirmCallback = null;
+      });
+
+      /* ──────────────── Aktivitäts-Tracking / Timeout ──────────────── */
+      function resetActivity() {
+        session.lastActivity = Date.now();
+        saveSession();
+        timeoutWarning.style.display = 'none';
+      }
+
+      ['click', 'keydown', 'touchstart'].forEach((evt) => {
+        document.addEventListener(evt, () => {
+          if (session.user) resetActivity();
+        });
+      });
+
+      function startTimeoutChecker() {
+        clearInterval(timeoutInterval);
+        timeoutInterval = setInterval(() => {
+          if (!session.user) return;
+          const elapsed = Date.now() - session.lastActivity;
+          const remaining = SESSION_TIMEOUT_MS - elapsed;
+
+          if (remaining <= 0) {
+            doLogout('Automatisch abgemeldet wegen Inaktivität.');
+            return;
+          }
+
+          if (remaining <= TIMEOUT_WARNING_MS) {
+            timeoutWarning.style.display = 'block';
+            const mins = Math.floor(remaining / 60000);
+            const secs = Math.floor((remaining % 60000) / 1000);
+            timeoutCountdown.textContent = mins + ':' + String(secs).padStart(2, '0');
+          } else {
+            timeoutWarning.style.display = 'none';
+          }
+        }, 1000);
+      }
+
+      /* ──────────────── Live-Timer ──────────────── */
+      function startTimer() {
+        clearInterval(timerInterval);
+        timerContainer.hidden = false;
+        timerInterval = setInterval(() => {
+          if (session.activeSegment) {
+            const elapsed = Date.now() - session.activeSegment.start;
+            timerDisplay.textContent = formatDuration(elapsed);
+          }
+        }, 1000);
+      }
+
+      function stopTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timerContainer.hidden = true;
+        timerDisplay.textContent = '00:00:00';
+      }
+
+      /* ──────────────── Log-Rendering (XSS-sicher) ──────────────── */
       function renderLogs() {
-        const logs = getLogs().sort((a,b) => b.start - a.start);
+        const logs = getLogs().sort((a, b) => b.start - a.start);
         logBody.innerHTML = '';
-        logs.forEach((l) => {
+        logs.forEach((l, index) => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${new Date(l.start).toLocaleDateString('de-DE')}</td>
-            <td>${l.employeeId}</td>
-            <td>${l.project}</td>
-            <td>${l.type}</td>
-            <td>${new Date(l.start).toLocaleTimeString('de-DE')}</td>
-            <td>${new Date(l.end).toLocaleTimeString('de-DE')}</td>
-            <td>${Math.round((l.end - l.start) / 60000)}</td>
-          `;
+
+          const cells = [
+            new Date(l.start).toLocaleDateString('de-DE'),
+            l.employeeId,
+            l.project,
+            l.type,
+            new Date(l.start).toLocaleTimeString('de-DE'),
+            new Date(l.end).toLocaleTimeString('de-DE'),
+            String(Math.round((l.end - l.start) / 60000)),
+          ];
+
+          cells.forEach((text) => {
+            const td = document.createElement('td');
+            td.textContent = text;
+            tr.appendChild(td);
+          });
+
+          // Löschen-Button
+          const tdAction = document.createElement('td');
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'X';
+          delBtn.className = 'danger';
+          delBtn.title = 'Eintrag löschen';
+          delBtn.addEventListener('click', () => deleteEntry(l.start, l.end));
+          tdAction.appendChild(delBtn);
+          tr.appendChild(tdAction);
+
           logBody.appendChild(tr);
         });
       }
 
+      /* ──────────────── Eintrag löschen ──────────────── */
+      async function deleteEntry(start, end) {
+        const ok = await showConfirm('Diesen Eintrag wirklich löschen?');
+        if (!ok) return;
+        const logs = getLogs().filter(
+          (l) => !(l.start === start && l.end === end)
+        );
+        setLogs(logs);
+        renderLogs();
+      }
+
+      /* ──────────────── UI-Aktualisierung ──────────────── */
       function updateTrackerUI() {
         if (!session.user) {
           trackerCard.hidden = true;
+          logoutBtn.hidden = true;
+          loginCard.hidden = false;
+          stopTimer();
           return;
         }
         trackerCard.hidden = false;
-        userChip.textContent = `${session.user.id} – ${session.user.name}`;
-        const mode = session.activeSegment?.type || 'Inaktiv';
-        modeChip.textContent = `Status: ${mode}`;
+        logoutBtn.hidden = false;
+        loginCard.hidden = true;
+        userChip.textContent = session.user.id + ' – ' + session.user.name;
+
+        if (session.activeSegment) {
+          const mode = session.activeSegment.type;
+          modeChip.textContent = 'Status: ' + mode;
+          modeChip.classList.add('active');
+          startTimer();
+        } else {
+          modeChip.textContent = 'Status: Inaktiv';
+          modeChip.classList.remove('active');
+          stopTimer();
+        }
       }
 
+      /* ──────────────── Login ──────────────── */
       loginBtn.addEventListener('click', () => {
         const selected = employees.find((e) => e.id === employeeId.value);
         if (!selected) return;
         if (!/^\d{4}$/.test(pinInput.value)) {
           loginStatus.textContent = 'Code muss 4-stellig sein.';
+          loginStatus.classList.add('error');
           return;
         }
         if (pinInput.value !== selected.pin) {
           loginStatus.textContent = 'Falscher Login-Code.';
+          loginStatus.classList.add('error');
           return;
         }
         session.user = selected;
-        loginStatus.textContent = `Erfolgreich eingeloggt: ${selected.name}`;
+        session.lastActivity = Date.now();
+        loginStatus.textContent = 'Erfolgreich eingeloggt: ' + selected.name;
+        loginStatus.classList.remove('error');
         pinInput.value = '';
         saveSession();
         updateTrackerUI();
+        startTimeoutChecker();
       });
 
+      // Enter-Taste im PIN-Feld löst Login aus
+      pinInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') loginBtn.click();
+      });
+
+      /* ──────────────── Logout ──────────────── */
+      function doLogout(message) {
+        // Laufendes Segment automatisch stoppen und speichern
+        if (session.activeSegment && session.user) {
+          const end = Date.now();
+          const logs = getLogs();
+          logs.push({
+            employeeId: session.user.id,
+            project: session.activeSegment.project,
+            type: session.activeSegment.type,
+            start: session.activeSegment.start,
+            end,
+          });
+          setLogs(logs);
+        }
+
+        session.user = null;
+        session.activeSegment = null;
+        saveSession();
+        clearInterval(timeoutInterval);
+        timeoutWarning.style.display = 'none';
+        updateTrackerUI();
+        renderLogs();
+        loginStatus.textContent = message || 'Erfolgreich abgemeldet.';
+        loginStatus.classList.remove('error');
+        trackStatus.textContent = '';
+      }
+
+      logoutBtn.addEventListener('click', async () => {
+        const msg = session.activeSegment
+          ? 'Es läuft noch ein Zeitsegment. Abmelden beendet und speichert es. Fortfahren?'
+          : 'Wirklich abmelden?';
+        const ok = await showConfirm(msg);
+        if (ok) doLogout();
+      });
+
+      /* ──────────────── Segment starten/stoppen ──────────────── */
       function beginSegment(type) {
         if (!session.user) {
           trackStatus.textContent = 'Bitte zuerst einloggen.';
@@ -217,7 +523,8 @@
           project: projectSelect.value,
           start: Date.now(),
         };
-        trackStatus.textContent = `${type} gestartet (${session.activeSegment.project}).`;
+        trackStatus.textContent = type + ' gestartet (' + session.activeSegment.project + ').';
+        resetActivity();
         saveSession();
         updateTrackerUI();
       }
@@ -225,11 +532,18 @@
       document.getElementById('startWork').addEventListener('click', () => beginSegment('Arbeitszeit'));
       document.getElementById('startBreak').addEventListener('click', () => beginSegment('Pausenzeit'));
 
-      document.getElementById('stopBtn').addEventListener('click', () => {
+      document.getElementById('stopBtn').addEventListener('click', async () => {
         if (!session.activeSegment || !session.user) {
           trackStatus.textContent = 'Kein laufendes Segment.';
           return;
         }
+
+        const elapsed = formatDuration(Date.now() - session.activeSegment.start);
+        const ok = await showConfirm(
+          session.activeSegment.type + ' beenden? (Dauer: ' + elapsed + ')'
+        );
+        if (!ok) return;
+
         const end = Date.now();
         const logs = getLogs();
         logs.push({
@@ -240,20 +554,43 @@
           end,
         });
         setLogs(logs);
-        trackStatus.textContent = `${session.activeSegment.type} beendet und gespeichert.`;
+        trackStatus.textContent = session.activeSegment.type + ' beendet und gespeichert.';
         session.activeSegment = null;
+        resetActivity();
         saveSession();
         updateTrackerUI();
         renderLogs();
       });
 
+      /* ──────────────── CSV Export (mit korrektem Escaping) ──────────────── */
+      function csvEscape(val) {
+        const str = String(val);
+        if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes(';')) {
+          return '"' + str.replace(/"/g, '""') + '"';
+        }
+        return str;
+      }
+
       document.getElementById('exportBtn').addEventListener('click', () => {
         const rows = getLogs();
-        const csv = [
-          'employeeId,project,type,start,end,durationMinutes',
-          ...rows.map((r) => `${r.employeeId},${r.project},${r.type},${new Date(r.start).toISOString()},${new Date(r.end).toISOString()},${Math.round((r.end-r.start)/60000)}`),
-        ].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        if (rows.length === 0) {
+          trackStatus.textContent = 'Keine Einträge zum Exportieren.';
+          return;
+        }
+        const header = 'Mitarbeiter-Nr;Projekt;Typ;Start;Ende;Dauer (Minuten)';
+        const csvRows = rows.map((r) =>
+          [
+            csvEscape(r.employeeId),
+            csvEscape(r.project),
+            csvEscape(r.type),
+            csvEscape(new Date(r.start).toISOString()),
+            csvEscape(new Date(r.end).toISOString()),
+            csvEscape(Math.round((r.end - r.start) / 60000)),
+          ].join(';')
+        );
+        const csv = [header, ...csvRows].join('\n');
+        const bom = '\uFEFF'; // BOM für Excel-Kompatibilität
+        const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -262,11 +599,25 @@
         URL.revokeObjectURL(url);
       });
 
+      /* ──────────────── Initialisierung ──────────────── */
       (() => {
-        const saved = JSON.parse(localStorage.getItem(sessionKey) || 'null');
-        if (saved) {
-          session.user = saved.user;
-          session.activeSegment = saved.activeSegment;
+        try {
+          const saved = JSON.parse(localStorage.getItem(sessionKey) || 'null');
+          if (saved && saved.user) {
+            // Prüfe ob Session noch gültig
+            const elapsed = Date.now() - (saved.lastActivity || 0);
+            if (elapsed < SESSION_TIMEOUT_MS) {
+              session.user = saved.user;
+              session.activeSegment = saved.activeSegment;
+              session.lastActivity = saved.lastActivity || Date.now();
+              startTimeoutChecker();
+            } else {
+              // Session abgelaufen - aufräumen
+              localStorage.removeItem(sessionKey);
+            }
+          }
+        } catch {
+          localStorage.removeItem(sessionKey);
         }
         updateTrackerUI();
         renderLogs();
