@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zeiterfassung – Kurtech</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
+        margin: 0;
+        background: #0b1220;
+        color: #e8eefc;
+        min-height: 100vh;
+      }
+      .wrap { max-width: 960px; margin: 0 auto; padding: 24px; }
+      .card {
+        background: #121b2f;
+        border: 1px solid #26334f;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+      h1, h2 { margin-top: 0; }
+      h1 { font-size: 22px; }
+      label { display: block; margin-bottom: 6px; font-size: 14px; color: #aab6d6; }
+      input, select, button {
+        border-radius: 8px;
+        border: 1px solid #34486f;
+        background: #0f1729;
+        color: #eff4ff;
+        padding: 10px;
+        font-size: 15px;
+        width: 100%;
+      }
+      select { cursor: pointer; }
+      .row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 10px;
+        align-items: end;
+      }
+      button { cursor: pointer; width: auto; transition: opacity 0.15s; }
+      button:hover { opacity: 0.85; }
+      button:disabled { opacity: 0.4; cursor: not-allowed; }
+      button.primary { background: #2a63ff; border-color: #2a63ff; }
+      button.warn { background: #7b2d2d; border-color: #a04747; }
+      button.good { background: #1f6d41; border-color: #2f9860; }
+      button.danger { background: #991b1b; border-color: #dc2626; font-size: 12px; padding: 6px 10px; }
+      button.logout { background: #4a3b6b; border-color: #7c5fad; }
+      .status { font-size: 14px; color: #9dd7ac; margin-top: 8px; min-height: 20px; }
+      .status.error { color: #f87171; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; border-bottom: 1px solid #273552; padding: 8px 4px; font-size: 14px; }
+      th { color: #8899bb; font-weight: 600; }
+      .muted { color: #9dadcd; font-size: 13px; }
+      .chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+      .chip {
+        background: #1a2743;
+        border: 1px solid #2c4168;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 12px;
+      }
+      .chip.active {
+        background: #1f3a1f;
+        border-color: #2f9860;
+        animation: pulse 2s infinite;
+      }
+      .timer-display {
+        font-size: 28px;
+        font-weight: bold;
+        color: #5eead4;
+        font-variant-numeric: tabular-nums;
+        margin: 12px 0;
+        letter-spacing: 1px;
+      }
+      .header-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #8899bb;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 24px;
+        color: #6b7fa3;
+        font-size: 14px;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+      }
+      @media (max-width: 600px) {
+        .wrap { padding: 12px; }
+        .row { grid-template-columns: 1fr; }
+        .header-row { flex-direction: column; align-items: flex-start; }
+        table { font-size: 12px; }
+        th, td { padding: 6px 2px; }
+        .timer-display { font-size: 22px; }
+        .card { padding: 14px; }
+        h1 { font-size: 18px; }
+      }
+      .table-scroll { overflow-x: auto; }
+
+      /* Confirm Dialog */
+      .confirm-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+      }
+      .confirm-box {
+        background: #121b2f;
+        border: 1px solid #26334f;
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 380px;
+        width: 90%;
+        text-align: center;
+      }
+      .confirm-box .btn-row {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 16px;
+      }
+
+      /* Toast */
+      .toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: #1f6d41;
+        border: 1px solid #2f9860;
+        color: #e8eefc;
+        padding: 12px 20px;
+        border-radius: 10px;
+        font-size: 14px;
+        z-index: 200;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s;
+      }
+      .toast.show { opacity: 1; transform: translateY(0); }
+      .toast.error { background: #7b2d2d; border-color: #a04747; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="header-row">
+        <h1>Kurtech Zeiterfassung</h1>
+        <button id="logoutBtn" class="logout" hidden>Abmelden</button>
+      </div>
+      <p class="muted">Mitarbeiter-Zeiterfassung für Heizungsprojekte. Login mit Mitarbeiter-Nr. und PIN.</p>
+
+      <!-- Login -->
+      <section class="card" id="loginCard">
+        <h2>Login</h2>
+        <div class="row">
+          <div>
+            <label for="employeeId">Mitarbeiter-Nr.</label>
+            <select id="employeeId"></select>
+          </div>
+          <div>
+            <label for="pin">4-stelliger Code</label>
+            <input id="pin" type="password" maxlength="4" inputmode="numeric" placeholder="PIN eingeben" />
+          </div>
+          <div>
+            <button id="loginBtn" class="primary">Einloggen</button>
+          </div>
+        </div>
+        <div id="loginStatus" class="status"></div>
+      </section>
+
+      <!-- Zeiterfassung -->
+      <section class="card" id="trackerCard" hidden>
+        <h2>Zeiterfassung</h2>
+        <div class="chips">
+          <div class="chip" id="userChip">-</div>
+          <div class="chip" id="modeChip">Status: Inaktiv</div>
+        </div>
+        <div id="timerContainer" hidden>
+          <div class="timer-display" id="timerDisplay">00:00:00</div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="project">Projekt</label>
+            <select id="project">
+              <option>Heizzentrale Nord</option>
+              <option>Objekt Grünerweg 19</option>
+              <option>Wohnpark Süd</option>
+              <option>Service &amp; Wartung</option>
+            </select>
+          </div>
+          <div><button id="startWork" class="good">Arbeitszeit starten</button></div>
+          <div><button id="startBreak" class="warn">Pause starten</button></div>
+          <div><button id="stopBtn">Stopp / beenden</button></div>
+        </div>
+        <p id="trackStatus" class="status"></p>
+      </section>
+
+      <!-- Einträge -->
+      <section class="card">
+        <div class="header-row">
+          <h2>Gespeicherte Einträge</h2>
+          <a id="exportLink" href="/api/export" style="text-decoration:none">
+            <button class="primary" style="width:auto">CSV Export</button>
+          </a>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Datum</th><th>Mitarbeiter</th><th>Projekt</th><th>Typ</th>
+                <th>Von</th><th>Bis</th><th>Dauer</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="logBody">
+              <tr><td colspan="8" class="empty-state">Noch keine Einträge vorhanden.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- Confirm Dialog -->
+    <div id="confirmOverlay" class="confirm-overlay" hidden>
+      <div class="confirm-box">
+        <p id="confirmMessage">Sind Sie sicher?</p>
+        <div class="btn-row">
+          <button id="confirmYes" class="warn">Ja</button>
+          <button id="confirmNo" class="primary">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+      /* ═══════════════════════════════════════════
+         API-Helper
+         ═══════════════════════════════════════════ */
+      async function api(url, options = {}) {
+        const opts = {
+          headers: { 'Content-Type': 'application/json' },
+          ...options,
+        };
+        const res = await fetch(url, opts);
+        if (res.status === 401) {
+          // Session abgelaufen
+          resetUI();
+          showToast('Sitzung abgelaufen. Bitte erneut einloggen.', true);
+          return null;
+        }
+        // CSV export returns text
+        const ct = res.headers.get('content-type') || '';
+        if (ct.includes('text/csv')) return res;
+        const data = await res.json();
+        if (!res.ok) {
+          showToast(data.error || 'Ein Fehler ist aufgetreten.', true);
+          return null;
+        }
+        return data;
+      }
+
+      /* ═══════════════════════════════════════════
+         DOM-Referenzen
+         ═══════════════════════════════════════════ */
+      const $ = (id) => document.getElementById(id);
+      const employeeSelect = $('employeeId');
+      const pinInput = $('pin');
+      const loginBtn = $('loginBtn');
+      const loginStatus = $('loginStatus');
+      const loginCard = $('loginCard');
+      const trackerCard = $('trackerCard');
+      const userChip = $('userChip');
+      const modeChip = $('modeChip');
+      const trackStatus = $('trackStatus');
+      const projectSelect = $('project');
+      const logBody = $('logBody');
+      const logoutBtn = $('logoutBtn');
+      const timerContainer = $('timerContainer');
+      const timerDisplay = $('timerDisplay');
+      const confirmOverlay = $('confirmOverlay');
+      const confirmMessage = $('confirmMessage');
+      const confirmYes = $('confirmYes');
+      const confirmNo = $('confirmNo');
+      const toastEl = $('toast');
+
+      /* ═══════════════════════════════════════════
+         State
+         ═══════════════════════════════════════════ */
+      let currentUser = null;
+      let activeSegment = null;
+      let timerInterval = null;
+      let confirmCallback = null;
+
+      /* ═══════════════════════════════════════════
+         Hilfsfunktionen
+         ═══════════════════════════════════════════ */
+      function formatDuration(ms) {
+        const totalSec = Math.floor(ms / 1000);
+        const h = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+        const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+        const s = String(totalSec % 60).padStart(2, '0');
+        return h + ':' + m + ':' + s;
+      }
+
+      function showToast(message, isError) {
+        toastEl.textContent = message;
+        toastEl.className = 'toast show' + (isError ? ' error' : '');
+        clearTimeout(toastEl._timeout);
+        toastEl._timeout = setTimeout(() => {
+          toastEl.className = 'toast';
+        }, 3500);
+      }
+
+      function showConfirm(message) {
+        return new Promise((resolve) => {
+          confirmMessage.textContent = message;
+          confirmOverlay.hidden = false;
+          confirmCallback = resolve;
+        });
+      }
+
+      confirmYes.addEventListener('click', () => {
+        confirmOverlay.hidden = true;
+        if (confirmCallback) confirmCallback(true);
+        confirmCallback = null;
+      });
+
+      confirmNo.addEventListener('click', () => {
+        confirmOverlay.hidden = true;
+        if (confirmCallback) confirmCallback(false);
+        confirmCallback = null;
+      });
+
+      /* ═══════════════════════════════════════════
+         Timer
+         ═══════════════════════════════════════════ */
+      function startTimer() {
+        clearInterval(timerInterval);
+        timerContainer.hidden = false;
+        timerInterval = setInterval(() => {
+          if (activeSegment) {
+            timerDisplay.textContent = formatDuration(Date.now() - activeSegment.start);
+          }
+        }, 1000);
+        // Sofort anzeigen
+        if (activeSegment) {
+          timerDisplay.textContent = formatDuration(Date.now() - activeSegment.start);
+        }
+      }
+
+      function stopTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+        timerContainer.hidden = true;
+        timerDisplay.textContent = '00:00:00';
+      }
+
+      /* ═══════════════════════════════════════════
+         UI-Aktualisierung
+         ═══════════════════════════════════════════ */
+      function resetUI() {
+        currentUser = null;
+        activeSegment = null;
+        loginCard.hidden = false;
+        trackerCard.hidden = true;
+        logoutBtn.hidden = true;
+        stopTimer();
+        loginStatus.textContent = '';
+        loginStatus.classList.remove('error');
+        trackStatus.textContent = '';
+      }
+
+      function updateTrackerUI() {
+        if (!currentUser) {
+          loginCard.hidden = false;
+          trackerCard.hidden = true;
+          logoutBtn.hidden = true;
+          stopTimer();
+          return;
+        }
+
+        loginCard.hidden = true;
+        trackerCard.hidden = false;
+        logoutBtn.hidden = false;
+        userChip.textContent = currentUser.id + ' – ' + currentUser.name;
+
+        if (activeSegment) {
+          modeChip.textContent = 'Status: ' + activeSegment.type;
+          modeChip.classList.add('active');
+          startTimer();
+        } else {
+          modeChip.textContent = 'Status: Inaktiv';
+          modeChip.classList.remove('active');
+          stopTimer();
+        }
+      }
+
+      /* ═══════════════════════════════════════════
+         Einträge laden & rendern (XSS-sicher)
+         ═══════════════════════════════════════════ */
+      async function loadEntries() {
+        const entries = await api('/api/entries');
+        if (!entries) return;
+
+        logBody.innerHTML = '';
+
+        if (entries.length === 0) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 8;
+          td.className = 'empty-state';
+          td.textContent = 'Noch keine Einträge vorhanden.';
+          tr.appendChild(td);
+          logBody.appendChild(tr);
+          return;
+        }
+
+        entries.forEach((e) => {
+          const tr = document.createElement('tr');
+          const cells = [
+            new Date(e.start_time).toLocaleDateString('de-DE'),
+            e.employee_name,
+            e.project,
+            e.type,
+            new Date(e.start_time).toLocaleTimeString('de-DE'),
+            new Date(e.end_time).toLocaleTimeString('de-DE'),
+            e.duration_minutes + ' min',
+          ];
+
+          cells.forEach((text) => {
+            const td = document.createElement('td');
+            td.textContent = text;
+            tr.appendChild(td);
+          });
+
+          // Löschen nur für eigene Einträge
+          const tdAction = document.createElement('td');
+          if (currentUser && e.employee_id === currentUser.id) {
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'X';
+            delBtn.className = 'danger';
+            delBtn.title = 'Eintrag löschen';
+            delBtn.addEventListener('click', () => deleteEntry(e.id));
+            tdAction.appendChild(delBtn);
+          }
+          tr.appendChild(tdAction);
+
+          logBody.appendChild(tr);
+        });
+      }
+
+      async function deleteEntry(id) {
+        const ok = await showConfirm('Diesen Eintrag wirklich löschen?');
+        if (!ok) return;
+
+        const result = await api('/api/entries/' + id, { method: 'DELETE' });
+        if (result) {
+          showToast('Eintrag gelöscht.');
+          loadEntries();
+        }
+      }
+
+      /* ═══════════════════════════════════════════
+         Mitarbeiter-Dropdown laden
+         ═══════════════════════════════════════════ */
+      async function loadEmployees() {
+        const employees = await api('/api/employees');
+        if (!employees) return;
+
+        employeeSelect.innerHTML = '';
+        employees.forEach((e) => {
+          const o = document.createElement('option');
+          o.value = e.id;
+          o.textContent = e.id + ' – ' + e.name;
+          employeeSelect.appendChild(o);
+        });
+      }
+
+      /* ═══════════════════════════════════════════
+         Login
+         ═══════════════════════════════════════════ */
+      loginBtn.addEventListener('click', async () => {
+        const empId = employeeSelect.value;
+        const pin = pinInput.value;
+
+        if (!empId) return;
+        if (!/^\d{4}$/.test(pin)) {
+          loginStatus.textContent = 'Code muss 4-stellig sein.';
+          loginStatus.classList.add('error');
+          return;
+        }
+
+        loginBtn.disabled = true;
+        const data = await api('/api/login', {
+          method: 'POST',
+          body: JSON.stringify({ employeeId: empId, pin }),
+        });
+        loginBtn.disabled = false;
+
+        if (!data) {
+          loginStatus.classList.add('error');
+          return;
+        }
+
+        currentUser = data.user;
+        activeSegment = null;
+        pinInput.value = '';
+        loginStatus.textContent = '';
+        showToast('Erfolgreich eingeloggt: ' + data.user.name);
+        updateTrackerUI();
+        loadEntries();
+      });
+
+      pinInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') loginBtn.click();
+      });
+
+      /* ═══════════════════════════════════════════
+         Logout
+         ═══════════════════════════════════════════ */
+      logoutBtn.addEventListener('click', async () => {
+        const msg = activeSegment
+          ? 'Es läuft noch ein Zeitsegment. Beim Abmelden wird es automatisch gespeichert. Fortfahren?'
+          : 'Wirklich abmelden?';
+        const ok = await showConfirm(msg);
+        if (!ok) return;
+
+        await api('/api/logout', { method: 'POST' });
+        resetUI();
+        showToast('Erfolgreich abgemeldet.');
+        loadEntries();
+      });
+
+      /* ═══════════════════════════════════════════
+         Segment starten / stoppen
+         ═══════════════════════════════════════════ */
+      async function beginSegment(type) {
+        if (!currentUser) {
+          trackStatus.textContent = 'Bitte zuerst einloggen.';
+          return;
+        }
+        if (activeSegment) {
+          trackStatus.textContent = 'Bitte aktuelles Segment zuerst stoppen.';
+          return;
+        }
+
+        const data = await api('/api/start', {
+          method: 'POST',
+          body: JSON.stringify({ project: projectSelect.value, type }),
+        });
+
+        if (data) {
+          activeSegment = data.activeSegment;
+          trackStatus.textContent = type + ' gestartet (' + activeSegment.project + ').';
+          updateTrackerUI();
+        }
+      }
+
+      $('startWork').addEventListener('click', () => beginSegment('Arbeitszeit'));
+      $('startBreak').addEventListener('click', () => beginSegment('Pausenzeit'));
+
+      $('stopBtn').addEventListener('click', async () => {
+        if (!activeSegment || !currentUser) {
+          trackStatus.textContent = 'Kein laufendes Segment.';
+          return;
+        }
+
+        const elapsed = formatDuration(Date.now() - activeSegment.start);
+        const ok = await showConfirm(
+          activeSegment.type + ' beenden? (Dauer: ' + elapsed + ')'
+        );
+        if (!ok) return;
+
+        const data = await api('/api/stop', { method: 'POST' });
+        if (data) {
+          trackStatus.textContent = activeSegment.type + ' beendet und gespeichert.';
+          activeSegment = null;
+          updateTrackerUI();
+          loadEntries();
+          showToast('Zeitsegment gespeichert.');
+        }
+      });
+
+      /* ═══════════════════════════════════════════
+         Initialisierung
+         ═══════════════════════════════════════════ */
+      (async () => {
+        await loadEmployees();
+
+        // Prüfe ob bereits eine Session existiert
+        const sessionData = await api('/api/session');
+        if (sessionData && sessionData.loggedIn) {
+          currentUser = sessionData.user;
+          activeSegment = sessionData.activeSegment;
+          updateTrackerUI();
+        }
+
+        loadEntries();
+      })();
+    </script>
+  </body>
+</html>
