@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/import_anleitung"
+        android:textSize="14sp"
+        android:lineSpacingMultiplier="1.4" />
+
+    <!-- Trennzeichen-Auswahl -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/trennzeichen"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:layout_marginTop="16dp" />
+
+    <RadioGroup
+        android:id="@+id/radioTrennzeichen"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/radioSemikolon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Semikolon (;)"
+            android:checked="true" />
+
+        <RadioButton
+            android:id="@+id/radioKomma"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Komma (,)"
+            android:layout_marginStart="16dp" />
+
+        <RadioButton
+            android:id="@+id/radioTab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tab"
+            android:layout_marginStart="16dp" />
+    </RadioGroup>
+
+    <CheckBox
+        android:id="@+id/checkHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/erste_zeile_header"
+        android:checked="true"
+        android:layout_marginTop="8dp" />
+
+    <!-- Datei auswählen -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDateiWaehlen"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/datei_waehlen"
+        android:layout_marginTop="24dp" />
+
+    <!-- Fortschritt -->
+    <ProgressBar
+        android:id="@+id/progressImport"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/txtImportStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:layout_marginTop="8dp"
+        android:gravity="center" />
+
+    <!-- Beispiel-Daten laden -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#E0E0E0"
+        android:layout_marginVertical="24dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/demo_titel"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/demo_beschreibung"
+        android:textSize="14sp"
+        android:layout_marginTop="4dp"
+        android:textColor="@android:color/darker_gray" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnDemoLaden"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/demo_laden"
+        android:layout_marginTop="8dp"
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+</LinearLayout>

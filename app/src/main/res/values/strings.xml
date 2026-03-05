@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">KalkulationsMatrix</string>
+    <string name="import_title">CSV Import</string>
+    <string name="detail_title">Positionsdetails</string>
+
+    <!-- Suche -->
+    <string name="suche_hint">Was kostet\u2026? Suchbegriff eingeben</string>
+    <string name="alle_kategorien">Alle Kategorien</string>
+    <string name="alle_gewerke">Alle Gewerke</string>
+
+    <!-- Leerer Zustand -->
+    <string name="keine_daten_titel">Keine Kalkulationsdaten</string>
+    <string name="keine_daten_nachricht">Importieren Sie Ihre Kalkulationshilfe als CSV-Datei, um loszulegen.</string>
+    <string name="keine_ergebnisse">Keine Ergebnisse gefunden</string>
+
+    <!-- Import -->
+    <string name="csv_importieren">CSV importieren</string>
+    <string name="import_anleitung">Importieren Sie Ihre Kalkulationshilfe als CSV-Datei.\n\nErwartetes Format (Semikolon-getrennt):\nPositionsNr;Kategorie;Bezeichnung;Beschreibung;Einheit;StundenSatz;MaterialKosten;GesamtKosten;Gewerk;Schwierigkeitsgrad</string>
+    <string name="trennzeichen">Trennzeichen:</string>
+    <string name="erste_zeile_header">Erste Zeile ist Kopfzeile</string>
+    <string name="datei_waehlen">CSV-Datei auswählen</string>
+    <string name="demo_titel">Demo-Daten</string>
+    <string name="demo_beschreibung">Laden Sie Beispieldaten, um die App auszuprobieren.</string>
+    <string name="demo_laden">Demo-Daten laden</string>
+
+    <!-- Detail -->
+    <string name="kalkulation_details">Kalkulationsdetails</string>
+    <string name="stunden_satz">Stundensatz</string>
+    <string name="material_kosten">Materialkosten</string>
+    <string name="gesamt_kosten">Gesamtkosten</string>
+    <string name="einheit">Einheit</string>
+    <string name="meta_info">Zusatzinformationen</string>
+    <string name="kategorie">Kategorie</string>
+    <string name="gewerk">Gewerk</string>
+    <string name="schwierigkeitsgrad">Schwierigkeitsgrad</string>
+    <string name="mengen_berechnung">Mengenberechnung</string>
+    <string name="menge">Menge:</string>
+    <string name="berechnete_kosten">Berechnete Gesamtkosten</string>
+
+    <!-- Ergebnis -->
+    <string name="ergebnis_count">%d Positionen gefunden</string>
+    <string name="positionen_gesamt">%d Positionen in Datenbank</string>
+
+    <!-- Import Status -->
+    <string name="import_laeuft">Importiere\u2026 %d Positionen</string>
+    <string name="import_fertig">%d Positionen importiert (%d Fehler)</string>
+    <string name="import_fehler">Fehler: %s</string>
+</resources>
