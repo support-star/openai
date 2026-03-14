@@ -84,6 +84,77 @@ Mitarbeiter-Zeiterfassung (MVP) – Vanilla HTML/CSS/JS, Dark Theme, localStorag
 - `/pruefprotokoll <typ>` – VDE-Prüfprotokolle erstellen
 - `/edoku` – Elektro-Dokumentation nach DIN 18015
 
+### Marketing
+- `/kampagne <typ>` – Marketing-Kampagnen planen und erstellen
+- `/marke` – Corporate Design und Markenauftritt
+- `/content <typ>` – Blog-Artikel, Newsletter, Pressemitteilungen
+- `/wettbewerb` – Wettbewerbsanalyse und SWOT
+- `/marketingplan` – Jahres-Marketingplan mit Budget
+
+### Datenbank
+- `/db-design` – Datenbankschema und ER-Diagramme entwerfen
+- `/sql <aktion>` – SQL-Queries und Migrationen generieren
+- `/storage` – localStorage optimieren und verwalten
+- `/backend <typ>` – REST-API und Datenbankanbindung vorbereiten
+- `/migration` – Datenmigration (localStorage → DB)
+
+### Betriebsprüfung
+- `/pruefung-vorbereiten` – Checkliste und Unterlagen für Betriebsprüfung
+- `/dokumente-pruefen` – Rechnungen, Verträge, Kassenbuch prüfen
+- `/steuer-check` – USt, Vorsteuer, AfA, Lohnsteuer kontrollieren
+- `/audit <bereich>` – Internes Qualitätsaudit durchführen
+- `/pruef-bericht` – Prüfbericht mit Maßnahmenplan erstellen
+
+### Organisationen
+- `/org-kontakte` – Verbände, Innungen, Kammern verwalten
+- `/lieferanten` – Lieferantenstammdaten und Konditionen
+- `/behoerden` – Behördenkontakte und Genehmigungen
+- `/partner` – Kooperationspartner und Subunternehmer
+- `/meldung <typ>` – Pflichtmeldungen an Innungen/Versicherungen
+
+### Zeitmanagement
+- `/tagesplan` – Tagesplanung mit Eisenhower-Matrix
+- `/wochenplan` – Wochenübersicht und Kapazitätsplanung
+- `/termine` – Terminverwaltung und Erinnerungen
+- `/zeitauswertung` – Soll/Ist-Vergleich und Produktivität
+- `/ressourcen` – Mitarbeiter-Auslastung und Engpässe
+
+### Kundenbindung
+- `/kunden` – Kundenstammdaten und CRM
+- `/kunden-mail <typ>` – Kundenkommunikation (Willkommen, Wartung, Angebote)
+- `/beschwerde` – Beschwerdemanagement und Eskalation
+- `/treue` – Treueprogramm und Empfehlungsmarketing
+- `/zufriedenheit` – Umfragen (NPS/CSAT) und Bewertungen
+
+### Programmieren
+- `/code-analyse` – Code analysieren, Komplexität, Refactoring
+- `/api <methode> <endpunkt>` – REST-API-Endpunkte implementieren
+- `/frontend <typ>` – Responsive Layouts und UI-Komponenten
+- `/chart <typ>` – SVG-Diagramme (Balken, Linien, Kreis, Gauge)
+- `/unittest <datei>` – Unit-Tests und Testabdeckung
+- `/debug` – Fehleranalyse und Performance-Profiling
+
+### Social Media & Medien
+- `/social-strategie` – Social-Media-Strategie für Handwerksbetriebe
+- `/social-post <plattform>` – Beiträge für Facebook, Instagram, LinkedIn
+- `/community` – Community-Management und Krisenmanagement
+- `/presse` – Pressemitteilungen und Medienarbeit
+- `/web-profil` – Google My Business, Local SEO, Bewertungen
+
+### Datenschutz
+- `/dsgvo` – Verarbeitungsverzeichnis, Datenschutzerklärung, TOMs
+- `/einwilligung <typ>` – Einwilligungen und Cookie-Consent
+- `/betroffene <recht>` – Auskunft, Löschung, Portabilität (Art. 15-20)
+- `/ds-audit` – Datenschutz-Audit und Schulungsunterlagen
+- `/datensicherheit` – Passwort-Richtlinien, Verschlüsselung, Notfallplan
+
+### Vermittlung
+- `/personal-suche` – Stellenausschreibungen und Bewerbungsmanagement
+- `/sub-vergabe` – Subunternehmer finden und beauftragen
+- `/auftrag-vermitteln` – Aufträge zuordnen und bestätigen
+- `/kooperation` – Gewerke-übergreifende Kooperationen
+- `/ausbildung` – Ausbildungsplätze und Berichtsheft-Vorlagen
+
 ## Regeln
 - Vanilla HTML/CSS/JS – kein Framework, kein Build-Tool
 - Dark Theme beibehalten (Farben aus `:root` in index.html)
