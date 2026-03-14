@@ -1,0 +1,1526 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0b1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<title>SHK-ERP</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--card:#121b2f;--border:#26334f;--blue:#2a63ff;--green:#1f6d41;--green2:#2f9860;--red:#7b2d2d;--red2:#a04747;--orange:#8b5e00;--orange2:#c98500;--text:#e8eefc;--muted:#9dadcd;--label:#aab6d6;--input-bg:#0f1729;--input-border:#34486f;--radius:10px;--header-h:48px;--nav-h:60px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.app-header{position:fixed;top:0;left:0;right:0;height:var(--header-h);background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100}
+.app-header h1{font-size:16px;font-weight:600}
+.app-header .user-info{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.app-header .user-info .avatar{width:28px;height:28px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff}
+.btn-logout{background:none;border:none;color:var(--red2);cursor:pointer;font-size:13px;padding:4px 8px}
+.page-content{padding:calc(var(--header-h) + 8px) 12px calc(var(--nav-h) + 12px);max-width:960px;margin:0 auto;min-height:100vh}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);background:var(--card);border-top:1px solid var(--border);display:flex;justify-content:space-around;align-items:center;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.bottom-nav a{display:flex;flex-direction:column;align-items:center;gap:2px;text-decoration:none;color:var(--muted);font-size:10px;padding:6px 12px;border-radius:8px;transition:.2s}
+.bottom-nav a.active{color:var(--blue)}
+.bottom-nav a .nav-icon{font-size:20px;line-height:1}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.card-title{font-size:15px;font-weight:600;margin-bottom:10px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+label{display:block;font-size:12px;color:var(--label);margin-bottom:4px}
+input,select,textarea{width:100%;border-radius:8px;border:1px solid var(--input-border);background:var(--input-bg);color:var(--text);padding:10px;font-size:14px;font-family:inherit}
+textarea{min-height:80px;resize:vertical}
+select{appearance:auto}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:14px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-success{background:var(--green);border-color:var(--green2);color:#fff}
+.btn-danger{background:var(--red);border-color:var(--red2);color:#fff}
+.btn-warning{background:var(--orange);border-color:var(--orange2);color:#fff}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-block{width:100%;justify-content:center}
+.btn-group{display:flex;gap:8px;flex-wrap:wrap}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-blue{background:rgba(42,99,255,.2);color:#6b9fff}
+.badge-green{background:rgba(31,109,65,.2);color:#5ec88a}
+.badge-red{background:rgba(123,45,45,.2);color:#e07070}
+.badge-orange{background:rgba(139,94,0,.2);color:#e8b84a}
+.badge-gray{background:rgba(157,173,205,.15);color:var(--muted)}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+.kpi-value{font-size:22px;font-weight:700;margin-bottom:2px}
+.kpi-label{font-size:11px;color:var(--muted)}
+.list-item{display:flex;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid var(--border);cursor:pointer;transition:.15s}
+.list-item:last-child{border-bottom:none}
+.list-item:active{background:rgba(42,99,255,.08)}
+.list-item-main{flex:1;min-width:0}
+.list-item-title{font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-item-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.search-bar{position:relative;margin-bottom:12px}
+.search-bar input{padding-left:36px}
+.search-bar::before{content:"";position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;border:2px solid var(--muted);border-radius:50%}
+.filter-chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:8px;-webkit-overflow-scrolling:touch}
+.filter-chips::-webkit-scrollbar{display:none}
+.chip{padding:6px 14px;border-radius:99px;font-size:12px;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;white-space:nowrap}
+.chip.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.fab{position:fixed;bottom:calc(var(--nav-h) + 16px);right:16px;width:52px;height:52px;border-radius:50%;background:var(--blue);color:#fff;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.4);z-index:50;display:flex;align-items:center;justify-content:center}
+.fab:active{transform:scale(.93)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:flex;align-items:flex-end;justify-content:center}
+.modal{background:var(--bg);border-top:1px solid var(--border);border-radius:16px 16px 0 0;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;padding:20px 16px;animation:slideUp .25s ease}
+.modal-full{border-radius:0;max-height:100vh;height:100vh}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.modal-header h2{font-size:18px}
+.modal-close{background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;padding:4px}
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;font-size:13px;z-index:300;animation:fadeIn .2s;max-width:90%}
+.toast-success{background:var(--green);color:#fff}
+.toast-error{background:var(--red2);color:#fff}
+.toast-info{background:var(--blue);color:#fff}
+@keyframes fadeIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:12px;overflow-x:auto}
+.tab{padding:10px 16px;font-size:13px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue)}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:8px 6px;font-size:13px;border-bottom:1px solid var(--border)}
+th{color:var(--label);font-weight:500;font-size:11px;text-transform:uppercase}
+.text-right{text-align:right}
+.text-center{text-align:center}
+.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}
+.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}
+.gap-8{gap:8px}
+.flex{display:flex}.flex-between{justify-content:space-between}.flex-center{align-items:center}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-state .empty-icon{font-size:40px;margin-bottom:8px;opacity:.5}
+.empty-state p{font-size:14px;margin-bottom:12px}
+.form-group{margin-bottom:12px}
+.detail-header{margin-bottom:16px}
+.detail-header h2{font-size:18px;margin-bottom:4px}
+.detail-header .detail-sub{font-size:13px;color:var(--muted)}
+.line-items th,.line-items td{padding:6px 4px;font-size:12px}
+.line-items input{padding:6px;font-size:12px}
+.line-items .btn-sm{padding:4px 8px}
+.sum-table{margin-left:auto;width:200px}
+.sum-table td{padding:4px 8px;font-size:13px}
+.sum-table .total{font-weight:700;font-size:15px;border-top:2px solid var(--border)}
+.timer-display{font-size:48px;font-weight:700;text-align:center;padding:20px;font-variant-numeric:tabular-nums}
+.timer-active{color:var(--green2)}
+.timer-paused{color:var(--orange2)}
+.chart-bar-container{display:flex;align-items:flex-end;gap:4px;height:120px;padding:8px 0}
+.chart-bar{flex:1;background:var(--blue);border-radius:4px 4px 0 0;min-height:2px;position:relative;transition:.3s}
+.chart-bar-label{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--muted);white-space:nowrap}
+.chart-bar-value{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text)}
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+.login-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:32px 24px;width:100%;max-width:380px}
+.login-card h1{text-align:center;font-size:24px;margin-bottom:4px}
+.login-card .login-sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:24px}
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:250;display:flex;align-items:center;justify-content:center;padding:20px}
+.confirm-box{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:340px;width:100%;text-align:center}
+.confirm-box p{margin-bottom:16px;font-size:14px}
+@media print{
+.app-header,.bottom-nav,.fab,.no-print{display:none!important}
+.page-content{padding:0!important}
+body{background:#fff!important;color:#000!important}
+.card{border:1px solid #ccc!important;background:#fff!important}
+.print-invoice{background:#fff;color:#000;padding:20mm}
+.print-invoice *{color:#000!important}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+<div id="confirmRoot"></div>
+<script>
+/* ===== SECTION 1: CONFIGURATION & DATA LAYER ===== */
+const COMPANY = {name:'SHK Weber GmbH',strasse:'Industriestr. 12',plz:'63456',ort:'Hanau',telefon:'06181-123456',email:'info@shk-weber.de',steuernr:'DE123456789',ustid:'DE987654321',bank:'Sparkasse Hanau',iban:'DE89 3704 0044 0532 0130 00',bic:'COBADEFFXXX',stundensatz:65,zahlungsziel:14};
+
+const SEED_EMPLOYEES = [
+  {id:'MA-001',nr:'GF01',vorname:'Thomas',nachname:'Weber',rolle:'GF',pin:'0000',telefon:'0151-1000001',email:'t.weber@shk-weber.de',qualifikationen:['Meister SHK','Betriebswirt HWK'],urlaubTage:30,aktiv:true},
+  {id:'MA-002',nr:'BU01',vorname:'Anna',nachname:'Schmidt',rolle:'BU',pin:'1234',telefon:'0151-2000001',email:'a.schmidt@shk-weber.de',qualifikationen:['Bürokauffrau'],urlaubTage:30,aktiv:true},
+  {id:'MA-003',nr:'BU02',vorname:'Lisa',nachname:'Müller',rolle:'BU',pin:'2345',telefon:'0151-2000002',email:'l.mueller@shk-weber.de',qualifikationen:['Industriekauffrau'],urlaubTage:30,aktiv:true},
+  {id:'MA-004',nr:'BU03',vorname:'Marc',nachname:'Fischer',rolle:'BU',pin:'3456',telefon:'0151-2000003',email:'m.fischer@shk-weber.de',qualifikationen:['Buchhalter'],urlaubTage:30,aktiv:true},
+  {id:'MA-005',nr:'BU04',vorname:'Jana',nachname:'Braun',rolle:'BU',pin:'4567',telefon:'0151-2000004',email:'j.braun@shk-weber.de',qualifikationen:['Bürokauffrau'],urlaubTage:30,aktiv:true},
+  {id:'MA-006',nr:'MO01',vorname:'Klaus',nachname:'Hoffmann',rolle:'MO',pin:'1111',telefon:'0151-3000001',email:'',qualifikationen:['Anlagenmechaniker SHK','Gasinstallateur'],urlaubTage:30,aktiv:true},
+  {id:'MA-007',nr:'MO02',vorname:'Peter',nachname:'Schulz',rolle:'MO',pin:'2222',telefon:'0151-3000002',email:'',qualifikationen:['Anlagenmechaniker SHK'],urlaubTage:30,aktiv:true},
+  {id:'MA-008',nr:'MO03',vorname:'Stefan',nachname:'Koch',rolle:'MO',pin:'3333',telefon:'0151-3000003',email:'',qualifikationen:['Anlagenmechaniker SHK','Schweißschein'],urlaubTage:30,aktiv:true},
+  {id:'MA-009',nr:'MO04',vorname:'Michael',nachname:'Bauer',rolle:'MO',pin:'4444',telefon:'0151-3000004',email:'',qualifikationen:['Anlagenmechaniker SHK'],urlaubTage:30,aktiv:true},
+  {id:'MA-010',nr:'MO05',vorname:'Andreas',nachname:'Wolf',rolle:'MO',pin:'5555',telefon:'0151-3000005',email:'',qualifikationen:['Anlagenmechaniker SHK','Elektrofachkraft'],urlaubTage:30,aktiv:true},
+  {id:'MA-011',nr:'MO06',vorname:'Jürgen',nachname:'Meier',rolle:'MO',pin:'6666',telefon:'0151-3000006',email:'',qualifikationen:['Anlagenmechaniker SHK'],urlaubTage:30,aktiv:true},
+  {id:'MA-012',nr:'MO07',vorname:'Frank',nachname:'Richter',rolle:'MO',pin:'7777',telefon:'0151-3000007',email:'',qualifikationen:['Anlagenmechaniker SHK','Kundendienst'],urlaubTage:30,aktiv:true},
+  {id:'MA-013',nr:'MO08',vorname:'Uwe',nachname:'Klein',rolle:'MO',pin:'8888',telefon:'0151-3000008',email:'',qualifikationen:['Anlagenmechaniker SHK'],urlaubTage:30,aktiv:true},
+  {id:'MA-014',nr:'MO09',vorname:'Dirk',nachname:'Neumann',rolle:'MO',pin:'9999',telefon:'0151-3000009',email:'',qualifikationen:['Anlagenmechaniker SHK','Gasinstallateur'],urlaubTage:30,aktiv:true},
+  {id:'MA-015',nr:'MO10',vorname:'Ralf',nachname:'Schwarz',rolle:'MO',pin:'1010',telefon:'0151-3000010',email:'',qualifikationen:['Anlagenmechaniker SHK'],urlaubTage:30,aktiv:true}
+];
+
+const SEED_CUSTOMERS = [
+  {id:'KU-001',typ:'gewerbe',firma:'Müller Hausverwaltung',anrede:'Herr',vorname:'Bernd',nachname:'Müller',strasse:'Frankfurter Str. 42',plz:'63456',ort:'Hanau',telefon:'06181-99001',email:'info@mueller-hv.de',notizen:'Stammkunde seit 2018'},
+  {id:'KU-002',typ:'gewerbe',firma:'Schneider Immobilien GmbH',anrede:'Frau',vorname:'Sabine',nachname:'Schneider',strasse:'Berliner Allee 15',plz:'63450',ort:'Hanau',telefon:'06181-99002',email:'schneider@immo-schneider.de',notizen:'Großkunde, mehrere Objekte'},
+  {id:'KU-003',typ:'gewerbe',firma:'Wohnbau Genossenschaft',anrede:'Herr',vorname:'Karl',nachname:'Heinrich',strasse:'Am Markt 8',plz:'63457',ort:'Hanau',telefon:'06181-99003',email:'heinrich@wohnbau-hu.de',notizen:'Rahmenvertrag Wartung'},
+  {id:'KU-004',typ:'gewerbe',firma:'Gemeinde Altenstadt',anrede:'Frau',vorname:'Maria',nachname:'Braun',strasse:'Rathausplatz 1',plz:'63674',ort:'Altenstadt',telefon:'06047-88001',email:'bauamt@altenstadt.de',notizen:'Öffentlicher Auftraggeber'},
+  {id:'KU-005',typ:'privat',firma:'',anrede:'Herr',vorname:'Wolfgang',nachname:'Bergmann',strasse:'Lindenweg 7',plz:'63456',ort:'Hanau',telefon:'06181-77001',email:'w.bergmann@email.de',notizen:'Einfamilienhaus, Heizung BJ 2010'}
+];
+
+const SEED_PROJECTS = [
+  {id:'PR-001',name:'Heizzentrale Nord',kundeId:'KU-003',beschreibung:'Sanierung Heizzentrale Wohnpark Nord',status:'aktiv'},
+  {id:'PR-002',name:'Objekt Grünerweg 19',kundeId:'KU-002',beschreibung:'Heizungsinstallation Mehrfamilienhaus',status:'aktiv'},
+  {id:'PR-003',name:'Wohnpark Süd',kundeId:'KU-001',beschreibung:'Wartung Heizungsanlagen Wohnpark Süd',status:'aktiv'},
+  {id:'PR-004',name:'Service & Wartung',kundeId:null,beschreibung:'Allgemeine Wartungs- und Serviceaufträge',status:'aktiv'}
+];
+
+const SEED_MATERIALS = [
+  {id:'MT-001',artikelNr:'HK-001',bezeichnung:'Gasbrennwertkessel 24kW',kategorie:'Heizkessel',einheit:'Stk',einkaufspreis:2200,verkaufspreis:3500,bestand:3,mindestbestand:2,lieferant:'Viessmann'},
+  {id:'MT-002',artikelNr:'HK-002',bezeichnung:'Gasbrennwertkessel 35kW',kategorie:'Heizkessel',einheit:'Stk',einkaufspreis:3100,verkaufspreis:4800,bestand:2,mindestbestand:1,lieferant:'Viessmann'},
+  {id:'MT-003',artikelNr:'RO-001',bezeichnung:'Kupferrohr 15mm (5m)',kategorie:'Rohre',einheit:'Stk',einkaufspreis:18,verkaufspreis:32,bestand:45,mindestbestand:20,lieferant:'Sanha'},
+  {id:'MT-004',artikelNr:'RO-002',bezeichnung:'Kupferrohr 22mm (5m)',kategorie:'Rohre',einheit:'Stk',einkaufspreis:28,verkaufspreis:48,bestand:30,mindestbestand:15,lieferant:'Sanha'},
+  {id:'MT-005',artikelNr:'RO-003',bezeichnung:'Verbundrohr 16x2 (50m)',kategorie:'Rohre',einheit:'Rolle',einkaufspreis:65,verkaufspreis:110,bestand:12,mindestbestand:5,lieferant:'Uponor'},
+  {id:'MT-006',artikelNr:'AR-001',bezeichnung:'Thermostatventil 1/2"',kategorie:'Armaturen',einheit:'Stk',einkaufspreis:8,verkaufspreis:18,bestand:80,mindestbestand:30,lieferant:'Oventrop'},
+  {id:'MT-007',artikelNr:'AR-002',bezeichnung:'Kugelhahn 1"',kategorie:'Armaturen',einheit:'Stk',einkaufspreis:12,verkaufspreis:24,bestand:25,mindestbestand:10,lieferant:'Oventrop'},
+  {id:'MT-008',artikelNr:'AR-003',bezeichnung:'Sicherheitsventil 3bar',kategorie:'Armaturen',einheit:'Stk',einkaufspreis:15,verkaufspreis:28,bestand:10,mindestbestand:5,lieferant:'Flamco'},
+  {id:'MT-009',artikelNr:'PU-001',bezeichnung:'Umwälzpumpe 25-60',kategorie:'Pumpen',einheit:'Stk',einkaufspreis:180,verkaufspreis:320,bestand:5,mindestbestand:3,lieferant:'Grundfos'},
+  {id:'MT-010',artikelNr:'PU-002',bezeichnung:'Umwälzpumpe 25-80',kategorie:'Pumpen',einheit:'Stk',einkaufspreis:240,verkaufspreis:420,bestand:3,mindestbestand:2,lieferant:'Grundfos'},
+  {id:'MT-011',artikelNr:'RE-001',bezeichnung:'Raumthermostat digital',kategorie:'Regelung',einheit:'Stk',einkaufspreis:35,verkaufspreis:65,bestand:15,mindestbestand:5,lieferant:'Honeywell'},
+  {id:'MT-012',artikelNr:'RE-002',bezeichnung:'Außentemperaturfühler',kategorie:'Regelung',einheit:'Stk',einkaufspreis:22,verkaufspreis:42,bestand:8,mindestbestand:3,lieferant:'Siemens'},
+  {id:'MT-013',artikelNr:'RE-003',bezeichnung:'Heizungsregler witterungsgeführt',kategorie:'Regelung',einheit:'Stk',einkaufspreis:280,verkaufspreis:450,bestand:4,mindestbestand:2,lieferant:'Viessmann'},
+  {id:'MT-014',artikelNr:'HZ-001',bezeichnung:'Plattenheizkörper 600x1000',kategorie:'Heizkessel',einheit:'Stk',einkaufspreis:95,verkaufspreis:180,bestand:8,mindestbestand:4,lieferant:'Buderus'},
+  {id:'MT-015',artikelNr:'HZ-002',bezeichnung:'Plattenheizkörper 600x1400',kategorie:'Heizkessel',einheit:'Stk',einkaufspreis:130,verkaufspreis:240,bestand:6,mindestbestand:3,lieferant:'Buderus'},
+  {id:'MT-016',artikelNr:'WZ-001',bezeichnung:'Presszange Set 15-35mm',kategorie:'Werkzeug',einheit:'Set',einkaufspreis:450,verkaufspreis:0,bestand:3,mindestbestand:2,lieferant:'Rothenberger'},
+  {id:'MT-017',artikelNr:'WZ-002',bezeichnung:'Rohrschneider 3-35mm',kategorie:'Werkzeug',einheit:'Stk',einkaufspreis:45,verkaufspreis:0,bestand:5,mindestbestand:2,lieferant:'Rothenberger'},
+  {id:'MT-018',artikelNr:'VM-001',bezeichnung:'Hanfdichtung (Rolle)',kategorie:'Verbrauchsmaterial',einheit:'Stk',einkaufspreis:3,verkaufspreis:8,bestand:50,mindestbestand:20,lieferant:'Verschiedene'},
+  {id:'MT-019',artikelNr:'VM-002',bezeichnung:'Teflonband PTFE',kategorie:'Verbrauchsmaterial',einheit:'Stk',einkaufspreis:1.5,verkaufspreis:4,bestand:60,mindestbestand:25,lieferant:'Verschiedene'},
+  {id:'MT-020',artikelNr:'VM-003',bezeichnung:'Ausdehnungsgefäß 18L',kategorie:'Armaturen',einheit:'Stk',einkaufspreis:38,verkaufspreis:72,bestand:6,mindestbestand:3,lieferant:'Flamco'}
+];
+
+/* ===== DATA ACCESS LAYER ===== */
+const DB = {
+  _g(k){ return JSON.parse(localStorage.getItem('erp_'+k)||'[]'); },
+  _s(k,v){ localStorage.setItem('erp_'+k,JSON.stringify(v)); },
+  _gs(k){ return JSON.parse(localStorage.getItem('erp_'+k)||'null'); },
+  _ss(k,v){ localStorage.setItem('erp_'+k,JSON.stringify(v)); },
+  getAll(c){ return this._g(c); },
+  getById(c,id){ return this._g(c).find(r=>r.id===id); },
+  save(c,rec){
+    const all=this._g(c);
+    const idx=all.findIndex(r=>r.id===rec.id);
+    rec.aktualisiert=Date.now();
+    if(idx>=0) all[idx]=rec; else { rec.erstellt=rec.erstellt||Date.now(); all.push(rec); }
+    this._s(c,all);
+    return rec;
+  },
+  remove(c,id){ this._s(c,this._g(c).filter(r=>r.id!==id)); },
+  genId(prefix){ return prefix+'-'+Date.now()+'-'+Math.random().toString(36).substr(2,4); },
+  nextNr(typ){
+    const c=this._gs('counters')||{};
+    const y=new Date().getFullYear();
+    const key=typ+'_'+y;
+    c[key]=(c[key]||0)+1;
+    this._ss('counters',c);
+    return typ.toUpperCase()+'-'+y+'-'+String(c[key]).padStart(3,'0');
+  },
+  session(v){ if(v===undefined) return this._gs('session'); this._ss('session',v); },
+  settings(v){ if(v===undefined) return this._gs('settings')||{...COMPANY}; this._ss('settings',v); },
+  seed(){
+    if(this._gs('seeded')) return;
+    this._s('mitarbeiter',SEED_EMPLOYEES);
+    this._s('kunden',SEED_CUSTOMERS);
+    this._s('projekte',SEED_PROJECTS);
+    this._s('material',SEED_MATERIALS);
+    this._s('auftraege',[
+      {id:'AU-001',nummer:'AU-2026-001',kundeId:'KU-003',projektId:'PR-001',titel:'Heizzentrale Pumpen tauschen',beschreibung:'Austausch von 3 Umwälzpumpen in der Heizzentrale Nord',adresse:'Nordring 12, 63456 Hanau',status:'in_arbeit',prioritaet:'hoch',monteure:['MA-006','MA-007'],geplantesDatum:'2026-03-14',erstellt:Date.now()-86400000*5,aktualisiert:Date.now()},
+      {id:'AU-002',nummer:'AU-2026-002',kundeId:'KU-005',projektId:'PR-004',titel:'Heizung Wartung Bergmann',beschreibung:'Jährliche Wartung Gasbrennwerttherme',adresse:'Lindenweg 7, 63456 Hanau',status:'geplant',prioritaet:'normal',monteure:['MA-008'],geplantesDatum:'2026-03-15',erstellt:Date.now()-86400000*2,aktualisiert:Date.now()},
+      {id:'AU-003',nummer:'AU-2026-003',kundeId:'KU-002',projektId:'PR-002',titel:'Heizkörper Montage EG',beschreibung:'Installation 6 Plattenheizkörper im Erdgeschoss',adresse:'Grünerweg 19, 63450 Hanau',status:'neu',prioritaet:'normal',monteure:[],geplantesDatum:'2026-03-20',erstellt:Date.now()-86400000,aktualisiert:Date.now()}
+    ]);
+    this._s('angebote',[
+      {id:'ANG-001',nummer:'ANG-2026-001',kundeId:'KU-005',betreff:'Heizungserneuerung Bergmann',status:'versendet',positionen:[{pos:1,bezeichnung:'Gasbrennwertkessel 24kW',einheit:'Stk',menge:1,einzelpreis:3500},{pos:2,bezeichnung:'Umwälzpumpe 25-60',einheit:'Stk',menge:1,einzelpreis:320},{pos:3,bezeichnung:'Montage und Inbetriebnahme',einheit:'Std',menge:12,einzelpreis:65},{pos:4,bezeichnung:'Verrohrung und Anschluss',einheit:'psch',menge:1,einzelpreis:480}],gueltigBis:'2026-04-14',erstellt:Date.now()-86400000*7,aktualisiert:Date.now()},
+      {id:'ANG-002',nummer:'ANG-2026-002',kundeId:'KU-004',betreff:'Heizungssanierung Turnhalle',status:'erstellt',positionen:[{pos:1,bezeichnung:'Gasbrennwertkessel 35kW',einheit:'Stk',menge:2,einzelpreis:4800},{pos:2,bezeichnung:'Heizungsregler witterungsgeführt',einheit:'Stk',menge:2,einzelpreis:450},{pos:3,bezeichnung:'Umwälzpumpe 25-80',einheit:'Stk',menge:4,einzelpreis:420},{pos:4,bezeichnung:'Montage und Inbetriebnahme',einheit:'Std',menge:40,einzelpreis:65},{pos:5,bezeichnung:'Material Rohrleitungen',einheit:'psch',menge:1,einzelpreis:2800}],gueltigBis:'2026-04-30',erstellt:Date.now()-86400000*3,aktualisiert:Date.now()}
+    ]);
+    this._s('rechnungen',[
+      {id:'RE-001',nummer:'RE-2026-001',kundeId:'KU-003',angebotId:null,auftragId:null,status:'versendet',positionen:[{pos:1,bezeichnung:'Wartung Heizzentrale Q1/2026',einheit:'psch',menge:1,einzelpreis:1200},{pos:2,bezeichnung:'Filterwechsel',einheit:'Stk',menge:4,einzelpreis:45},{pos:3,bezeichnung:'Entlüftung Heizkreise',einheit:'Std',menge:3,einzelpreis:65}],leistungsdatum:'2026-02-28',zahlungsziel:'2026-03-28',bezahltAm:null,bezahltBetrag:0,erstellt:Date.now()-86400000*14,aktualisiert:Date.now()}
+    ]);
+    this._s('zeitlog',[]);
+    this._s('materialUsage',[]);
+    this._s('urlaub',[]);
+    this._ss('counters',{AU_2026:3,ANG_2026:2,RE_2026:1,KU_2026:0});
+    this._ss('settings',{...COMPANY});
+    this._ss('seeded',true);
+  }
+};
+
+/* ===== UTILITIES ===== */
+function fmt(n){return new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(n);}
+function fmtN(n){return new Intl.NumberFormat('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);}
+function fmtD(ts){if(!ts)return'-';const d=new Date(ts);return d.toLocaleDateString('de-DE');}
+function fmtDI(iso){if(!iso)return'-';const p=iso.split('-');return p[2]+'.'+p[1]+'.'+p[0];}
+function fmtT(ts){return new Date(ts).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});}
+function fmtDur(ms){const h=Math.floor(ms/3600000);const m=Math.floor((ms%3600000)/60000);return h+'h '+m+'m';}
+function today(){return new Date().toISOString().split('T')[0];}
+function calcPositionen(pos){
+  const netto=pos.reduce((s,p)=>s+(p.menge*p.einzelpreis),0);
+  const mwst=netto*0.19;
+  return{netto,mwst,brutto:netto+mwst};
+}
+function empName(id){const e=DB.getById('mitarbeiter',id);return e?e.vorname+' '+e.nachname:'Unbekannt';}
+function kundeName(id){const k=DB.getById('kunden',id);if(!k)return'Unbekannt';return k.firma||k.vorname+' '+k.nachname;}
+function rolleLabel(r){return{GF:'Geschäftsführer',BU:'Büro',MO:'Monteur'}[r]||r;}
+function statusBadge(s,map){const m=map[s]||{label:s,cls:'badge-gray'};return`<span class="badge ${m.cls}">${m.label}</span>`;}
+const AUFTRAG_STATUS={neu:{label:'Neu',cls:'badge-gray'},geplant:{label:'Geplant',cls:'badge-blue'},in_arbeit:{label:'In Arbeit',cls:'badge-orange'},abgeschlossen:{label:'Abgeschlossen',cls:'badge-green'},abgerechnet:{label:'Abgerechnet',cls:'badge-green'}};
+const ANGEBOT_STATUS={erstellt:{label:'Erstellt',cls:'badge-gray'},versendet:{label:'Versendet',cls:'badge-blue'},angenommen:{label:'Angenommen',cls:'badge-green'},abgelehnt:{label:'Abgelehnt',cls:'badge-red'}};
+const RECHNUNG_STATUS={erstellt:{label:'Erstellt',cls:'badge-gray'},versendet:{label:'Versendet',cls:'badge-blue'},bezahlt:{label:'Bezahlt',cls:'badge-green'},ueberfaellig:{label:'Überfällig',cls:'badge-red'},storniert:{label:'Storniert',cls:'badge-red'}};
+const ZEIT_STATUS={offen:{label:'Offen',cls:'badge-gray'},genehmigt:{label:'Genehmigt',cls:'badge-green'},abgelehnt:{label:'Abgelehnt',cls:'badge-red'}};
+
+function showToast(msg,type='info'){
+  const t=document.getElementById('toastRoot');
+  t.innerHTML=`<div class="toast toast-${type}">${msg}</div>`;
+  setTimeout(()=>t.innerHTML='',2500);
+}
+function showConfirm(msg,onYes){
+  const r=document.getElementById('confirmRoot');
+  r.innerHTML=`<div class="confirm-overlay"><div class="confirm-box"><p>${msg}</p><div class="btn-group" style="justify-content:center"><button class="btn btn-danger" id="cfmYes">Ja</button><button class="btn" id="cfmNo">Abbrechen</button></div></div></div>`;
+  document.getElementById('cfmYes').onclick=()=>{r.innerHTML='';onYes();};
+  document.getElementById('cfmNo').onclick=()=>r.innerHTML='';
+}
+function showModal(title,html,full=false){
+  const r=document.getElementById('modalRoot');
+  r.innerHTML=`<div class="modal-overlay"><div class="modal ${full?'modal-full':''}"><div class="modal-header"><h2>${title}</h2><button class="modal-close" id="modalClose">&times;</button></div><div class="modal-body">${html}</div></div></div>`;
+  document.getElementById('modalClose').onclick=closeModal;
+  r.querySelector('.modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal();});
+}
+function closeModal(){document.getElementById('modalRoot').innerHTML='';}
+
+/* ===== SECTION 2: AUTH & ROUTER ===== */
+let currentUser=null;
+let timerInterval=null;
+
+function getSession(){
+  const s=DB.session();
+  if(!s)return null;
+  const emp=DB.getById('mitarbeiter',s.userId);
+  if(!emp)return null;
+  currentUser=emp;
+  return emp;
+}
+function login(id,pin){
+  const emp=DB.getById('mitarbeiter',id);
+  if(!emp)return false;
+  if(emp.pin!==pin)return false;
+  currentUser=emp;
+  DB.session({userId:emp.id,rolle:emp.rolle,loginTime:Date.now()});
+  return true;
+}
+function logout(){
+  currentUser=null;
+  if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+  DB.session(null);
+  location.hash='#/login';
+  render();
+}
+function isGF(){return currentUser&&currentUser.rolle==='GF';}
+function isBU(){return currentUser&&currentUser.rolle==='BU';}
+function isMO(){return currentUser&&currentUser.rolle==='MO';}
+function canAccess(roles){if(!currentUser)return false;return roles.includes(currentUser.rolle);}
+
+const ROUTES={
+  '#/login':{render:renderLogin,roles:null},
+  '#/dashboard':{render:renderDashboard,roles:['GF','BU','MO']},
+  '#/auftraege':{render:renderAuftraege,roles:['GF','BU','MO']},
+  '#/kunden':{render:renderKunden,roles:['GF','BU']},
+  '#/zeit':{render:renderZeit,roles:['GF','BU','MO']},
+  '#/angebote':{render:renderAngebote,roles:['GF','BU']},
+  '#/rechnungen':{render:renderRechnungen,roles:['GF','BU']},
+  '#/material':{render:renderMaterial,roles:['GF','BU','MO']},
+  '#/personal':{render:renderPersonal,roles:['GF','BU']},
+  '#/berichte':{render:renderBerichte,roles:['GF','BU']},
+  '#/einstellungen':{render:renderEinstellungen,roles:['GF']}
+};
+
+function getRoute(){return location.hash||'#/login';}
+function getRouteBase(){return getRoute().split('/').slice(0,2).join('/');}
+function getRouteParam(){const p=getRoute().split('/');return p.length>2?p.slice(2).join('/'):null;}
+
+function render(){
+  const hash=getRoute();
+  const base=getRouteBase();
+  if(!currentUser&&base!=='#/login'){location.hash='#/login';return;}
+  const route=ROUTES[base];
+  if(!route){location.hash='#/dashboard';return;}
+  if(route.roles&&!canAccess(route.roles)){location.hash='#/dashboard';showToast('Kein Zugriff','error');return;}
+  const app=document.getElementById('app');
+  if(base==='#/login'){
+    app.innerHTML=renderLoginScreen();
+    bindLoginEvents();
+    return;
+  }
+  app.innerHTML=renderShell();
+  const content=document.getElementById('pageContent');
+  const param=getRouteParam();
+  route.render(content,param);
+}
+window.addEventListener('hashchange',render);
+
+function renderShell(){
+  const nav=getNavItems();
+  const activeBase=getRouteBase();
+  const initials=currentUser?currentUser.vorname[0]+currentUser.nachname[0]:'??';
+  return`
+  <div class="app-header">
+    <h1>SHK-ERP</h1>
+    <div class="user-info">
+      <span>${currentUser.vorname} ${currentUser.nachname}</span>
+      <div class="avatar">${initials}</div>
+      <button class="btn-logout" onclick="logout()">Abmelden</button>
+    </div>
+  </div>
+  <div class="page-content" id="pageContent"></div>
+  <nav class="bottom-nav">
+    ${nav.map(n=>`<a href="${n.hash}" class="${activeBase===n.hash?'active':''}" title="${n.label}"><span class="nav-icon">${n.icon}</span>${n.label}</a>`).join('')}
+  </nav>`;
+}
+function getNavItems(){
+  const items=[];
+  items.push({hash:'#/dashboard',icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',label:'Start'});
+  items.push({hash:'#/auftraege',icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',label:'Aufträge'});
+  if(canAccess(['GF','BU'])){
+    items.push({hash:'#/kunden',icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',label:'Kunden'});
+  }
+  if(isMO()){
+    items.push({hash:'#/zeit',icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',label:'Zeit'});
+  }
+  if(canAccess(['GF','BU'])){
+    items.push({hash:'#/rechnungen',icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',label:'Finanzen'});
+  }
+  const moreItems=[];
+  if(!isMO()) moreItems.push({hash:'#/zeit',label:'Zeiterfassung'});
+  moreItems.push({hash:'#/material',label:'Material'});
+  if(canAccess(['GF','BU'])){
+    moreItems.push({hash:'#/angebote',label:'Angebote'});
+    moreItems.push({hash:'#/personal',label:'Personal'});
+    moreItems.push({hash:'#/berichte',label:'Berichte'});
+  }
+  if(isGF()) moreItems.push({hash:'#/einstellungen',label:'Einstellungen'});
+  items.push({hash:'javascript:void(0)',icon:'<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>',label:'Mehr',onclick:true,moreItems});
+  return items;
+}
+
+/* ===== LOGIN ===== */
+function renderLoginScreen(){
+  const emps=DB.getAll('mitarbeiter').filter(e=>e.aktiv);
+  const groups={GF:[],BU:[],MO:[]};
+  emps.forEach(e=>(groups[e.rolle]||[]).push(e));
+  let opts='<option value="">-- Mitarbeiter wählen --</option>';
+  if(groups.GF.length) opts+=`<optgroup label="Geschäftsführung">${groups.GF.map(e=>`<option value="${e.id}">${e.vorname} ${e.nachname}</option>`).join('')}</optgroup>`;
+  if(groups.BU.length) opts+=`<optgroup label="Büro">${groups.BU.map(e=>`<option value="${e.id}">${e.vorname} ${e.nachname}</option>`).join('')}</optgroup>`;
+  if(groups.MO.length) opts+=`<optgroup label="Monteure">${groups.MO.map(e=>`<option value="${e.id}">${e.vorname} ${e.nachname}</option>`).join('')}</optgroup>`;
+  return`<div class="login-screen"><div class="login-card">
+    <h1>SHK-ERP</h1>
+    <p class="login-sub">${COMPANY.name}</p>
+    <div class="form-group"><label>Mitarbeiter</label><select id="loginEmp">${opts}</select></div>
+    <div class="form-group"><label>PIN (4-stellig)</label><input id="loginPin" type="password" maxlength="4" inputmode="numeric" placeholder="****"></div>
+    <button class="btn btn-primary btn-block mt-8" id="loginBtn">Anmelden</button>
+    <p id="loginError" class="mt-8" style="color:var(--red2);font-size:13px;text-align:center"></p>
+  </div></div>`;
+}
+function renderLogin(){}
+function bindLoginEvents(){
+  const btn=document.getElementById('loginBtn');
+  if(!btn)return;
+  btn.onclick=()=>{
+    const id=document.getElementById('loginEmp').value;
+    const pin=document.getElementById('loginPin').value;
+    if(!id){document.getElementById('loginError').textContent='Bitte Mitarbeiter wählen.';return;}
+    if(pin.length!==4){document.getElementById('loginError').textContent='PIN muss 4-stellig sein.';return;}
+    if(login(id,pin)){location.hash='#/dashboard';render();}
+    else{document.getElementById('loginError').textContent='Falscher PIN.';}
+  };
+  document.getElementById('loginPin').addEventListener('keydown',e=>{if(e.key==='Enter')btn.click();});
+}
+
+/* ===== SECTION 3: DASHBOARD ===== */
+function renderDashboard(el){
+  if(isGF()) renderDashboardGF(el);
+  else if(isBU()) renderDashboardBU(el);
+  else renderDashboardMO(el);
+}
+function renderDashboardGF(el){
+  const rechnungen=DB.getAll('rechnungen');
+  const auftraege=DB.getAll('auftraege');
+  const zeit=DB.getAll('zeitlog');
+  const now=new Date();const monat=now.getMonth();const jahr=now.getFullYear();
+  const bezahlt=rechnungen.filter(r=>r.status==='bezahlt'&&new Date(r.erstellt).getMonth()===monat&&new Date(r.erstellt).getFullYear()===jahr);
+  const umsatz=bezahlt.reduce((s,r)=>s+calcPositionen(r.positionen).brutto,0);
+  const offeneR=rechnungen.filter(r=>r.status==='versendet'||r.status==='ueberfaellig');
+  const offeneBetrag=offeneR.reduce((s,r)=>s+calcPositionen(r.positionen).brutto,0);
+  const aktiveA=auftraege.filter(a=>a.status==='in_arbeit').length;
+  const monteure=DB.getAll('mitarbeiter').filter(m=>m.rolle==='MO'&&m.aktiv).length;
+  // check overdue
+  rechnungen.forEach(r=>{if(r.status==='versendet'&&r.zahlungsziel&&new Date(r.zahlungsziel)<now){r.status='ueberfaellig';DB.save('rechnungen',r);}});
+
+  el.innerHTML=`
+  <h2 class="mb-12">Dashboard</h2>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-value" style="color:var(--green2)">${fmt(umsatz)}</div><div class="kpi-label">Umsatz ${now.toLocaleString('de-DE',{month:'long'})}</div></div>
+    <div class="kpi-card"><div class="kpi-value" style="color:var(--red2)">${fmt(offeneBetrag)}</div><div class="kpi-label">${offeneR.length} Offene Rechnungen</div></div>
+    <div class="kpi-card"><div class="kpi-value" style="color:var(--orange2)">${aktiveA}</div><div class="kpi-label">Aktive Aufträge</div></div>
+    <div class="kpi-card"><div class="kpi-value">${monteure}</div><div class="kpi-label">Monteure aktiv</div></div>
+  </div>
+  <div class="card"><div class="card-title">Letzte Aufträge</div>
+    ${auftraege.sort((a,b)=>(b.aktualisiert||0)-(a.aktualisiert||0)).slice(0,5).map(a=>`
+      <div class="list-item" onclick="location.hash='#/auftraege/${a.id}'">
+        <div class="list-item-main"><div class="list-item-title">${a.titel}</div><div class="list-item-sub">${a.nummer} · ${kundeName(a.kundeId)}</div></div>
+        ${statusBadge(a.status,AUFTRAG_STATUS)}
+      </div>`).join('')}
+    ${auftraege.length===0?'<div class="empty-state"><p>Keine Aufträge vorhanden</p></div>':''}
+  </div>
+  <div class="card"><div class="card-title">Schnellzugriff</div>
+    <div class="btn-group"><a href="#/auftraege" class="btn btn-primary btn-sm">Neuer Auftrag</a><a href="#/angebote" class="btn btn-sm">Neues Angebot</a><a href="#/rechnungen" class="btn btn-sm">Neue Rechnung</a></div>
+  </div>`;
+}
+function renderDashboardBU(el){
+  const angebote=DB.getAll('angebote').filter(a=>a.status==='erstellt'||a.status==='versendet');
+  const rechnungen=DB.getAll('rechnungen').filter(r=>r.status==='versendet'||r.status==='ueberfaellig');
+  const auftraege=DB.getAll('auftraege').filter(a=>a.status==='neu');
+  el.innerHTML=`
+  <h2 class="mb-12">Dashboard</h2>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-value">${angebote.length}</div><div class="kpi-label">Offene Angebote</div></div>
+    <div class="kpi-card"><div class="kpi-value" style="color:var(--red2)">${rechnungen.length}</div><div class="kpi-label">Unbezahlte Rechnungen</div></div>
+    <div class="kpi-card"><div class="kpi-value">${auftraege.length}</div><div class="kpi-label">Neue Aufträge</div></div>
+    <div class="kpi-card"><div class="kpi-value">${DB.getAll('zeitlog').filter(z=>z.status==='offen').length}</div><div class="kpi-label">Zeiten zur Prüfung</div></div>
+  </div>
+  <div class="card"><div class="card-title">Fällige Rechnungen</div>
+    ${rechnungen.slice(0,5).map(r=>`<div class="list-item" onclick="location.hash='#/rechnungen/${r.id}'"><div class="list-item-main"><div class="list-item-title">${r.nummer}</div><div class="list-item-sub">${kundeName(r.kundeId)} · ${fmt(calcPositionen(r.positionen).brutto)}</div></div>${statusBadge(r.status,RECHNUNG_STATUS)}</div>`).join('')}
+    ${rechnungen.length===0?'<div class="empty-state"><p>Keine fälligen Rechnungen</p></div>':''}
+  </div>`;
+}
+function renderDashboardMO(el){
+  const meineAuftraege=DB.getAll('auftraege').filter(a=>a.monteure&&a.monteure.includes(currentUser.id)&&(a.status==='geplant'||a.status==='in_arbeit'));
+  const activeTimer=DB.getAll('zeitlog').find(z=>z.mitarbeiterId===currentUser.id&&!z.ende);
+  el.innerHTML=`
+  <h2 class="mb-12">Mein Tag</h2>
+  ${activeTimer?`
+    <div class="card" style="border-color:var(--green2)">
+      <div class="card-title" style="color:var(--green2)">Timer läuft</div>
+      <div class="timer-display timer-active" id="activeTimerDisplay">--:--:--</div>
+      <div class="text-center mb-8" style="color:var(--muted)">${activeTimer.typ==='arbeit'?'Arbeitszeit':activeTimer.typ==='pause'?'Pause':'Fahrtzeit'}</div>
+      <button class="btn btn-danger btn-block" onclick="stopTimer()">Stopp</button>
+    </div>`:`
+    <div class="card">
+      <div class="card-title">Timer starten</div>
+      <div class="form-group"><label>Auftrag</label><select id="timerAuftrag">
+        <option value="">-- Auftrag wählen --</option>
+        ${meineAuftraege.map(a=>`<option value="${a.id}">${a.nummer} – ${a.titel}</option>`).join('')}
+      </select></div>
+      <div class="btn-group">
+        <button class="btn btn-success" onclick="startTimer('arbeit')">Arbeitszeit</button>
+        <button class="btn btn-warning" onclick="startTimer('fahrt')">Fahrtzeit</button>
+        <button class="btn" onclick="startTimer('pause')">Pause</button>
+      </div>
+    </div>`}
+  <div class="card"><div class="card-title">Meine Aufträge</div>
+    ${meineAuftraege.map(a=>`
+      <div class="list-item" onclick="location.hash='#/auftraege/${a.id}'">
+        <div class="list-item-main"><div class="list-item-title">${a.titel}</div><div class="list-item-sub">${a.adresse||''} · ${fmtDI(a.geplantesDatum)}</div></div>
+        ${statusBadge(a.status,AUFTRAG_STATUS)}
+      </div>`).join('')}
+    ${meineAuftraege.length===0?'<div class="empty-state"><p>Keine Aufträge zugewiesen</p></div>':''}
+  </div>`;
+  if(activeTimer) startTimerDisplay(activeTimer.start);
+}
+
+/* ===== TIMER FUNCTIONS ===== */
+function startTimer(typ){
+  const auftragId=document.getElementById('timerAuftrag')?.value||null;
+  if(typ==='arbeit'&&!auftragId){showToast('Bitte Auftrag wählen','error');return;}
+  const active=DB.getAll('zeitlog').find(z=>z.mitarbeiterId===currentUser.id&&!z.ende);
+  if(active){showToast('Timer läuft bereits','error');return;}
+  DB.save('zeitlog',{id:DB.genId('ZE'),mitarbeiterId:currentUser.id,auftragId,typ,start:Date.now(),ende:null,dauer:0,status:'offen',notiz:''});
+  showToast(typ==='arbeit'?'Arbeitszeit gestartet':typ==='pause'?'Pause gestartet':'Fahrtzeit gestartet','success');
+  render();
+}
+function stopTimer(){
+  const active=DB.getAll('zeitlog').find(z=>z.mitarbeiterId===currentUser.id&&!z.ende);
+  if(!active)return;
+  active.ende=Date.now();
+  active.dauer=active.ende-active.start;
+  DB.save('zeitlog',active);
+  if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+  showToast('Timer gestoppt – '+fmtDur(active.dauer),'success');
+  render();
+}
+function startTimerDisplay(startTime){
+  if(timerInterval)clearInterval(timerInterval);
+  const el=document.getElementById('activeTimerDisplay');
+  function update(){
+    if(!el||!document.getElementById('activeTimerDisplay'))return clearInterval(timerInterval);
+    const d=Date.now()-startTime;
+    const h=String(Math.floor(d/3600000)).padStart(2,'0');
+    const m=String(Math.floor((d%3600000)/60000)).padStart(2,'0');
+    const s=String(Math.floor((d%60000)/1000)).padStart(2,'0');
+    el.textContent=h+':'+m+':'+s;
+  }
+  update();
+  timerInterval=setInterval(update,1000);
+}
+
+/* ===== SECTION 4: AUFTRÄGE ===== */
+function renderAuftraege(el,param){
+  if(param) return renderAuftragDetail(el,param);
+  const auftraege=DB.getAll('auftraege');
+  const filter=new URLSearchParams(location.hash.split('?')[1]||'').get('f')||'alle';
+  const filtered=filter==='alle'?auftraege:auftraege.filter(a=>a.status===filter);
+  el.innerHTML=`
+  <h2 class="mb-12">Aufträge</h2>
+  <div class="filter-chips">
+    ${['alle','neu','geplant','in_arbeit','abgeschlossen','abgerechnet'].map(f=>`<span class="chip ${filter===f?'active':''}" onclick="location.hash='#/auftraege?f=${f}';render()">${f==='alle'?'Alle':(AUFTRAG_STATUS[f]?.label||f)} (${f==='alle'?auftraege.length:auftraege.filter(a=>a.status===f).length})</span>`).join('')}
+  </div>
+  <div class="search-bar"><input id="searchAuftraege" placeholder="Suchen..." oninput="filterAuftraege()"></div>
+  <div class="card" id="auftraegeListe">
+    ${filtered.sort((a,b)=>(b.aktualisiert||0)-(a.aktualisiert||0)).map(a=>`
+      <div class="list-item" onclick="location.hash='#/auftraege/${a.id}'" data-search="${(a.titel+a.nummer+kundeName(a.kundeId)).toLowerCase()}">
+        <div class="list-item-main">
+          <div class="list-item-title">${a.titel}</div>
+          <div class="list-item-sub">${a.nummer} · ${kundeName(a.kundeId)} · ${fmtDI(a.geplantesDatum)}</div>
+        </div>
+        ${statusBadge(a.status,AUFTRAG_STATUS)}
+      </div>`).join('')}
+    ${filtered.length===0?'<div class="empty-state"><p>Keine Aufträge gefunden</p></div>':''}
+  </div>`;
+  if(canAccess(['GF','BU'])) el.innerHTML+=`<button class="fab" onclick="showAuftragForm()">+</button>`;
+}
+function filterAuftraege(){
+  const q=document.getElementById('searchAuftraege').value.toLowerCase();
+  document.querySelectorAll('#auftraegeListe .list-item').forEach(item=>{
+    item.style.display=item.dataset.search.includes(q)?'':'none';
+  });
+}
+function renderAuftragDetail(el,id){
+  const a=DB.getById('auftraege',id);
+  if(!a){el.innerHTML='<div class="empty-state"><p>Auftrag nicht gefunden</p></div>';return;}
+  const kunde=DB.getById('kunden',a.kundeId);
+  const zeiten=DB.getAll('zeitlog').filter(z=>z.auftragId===id);
+  const totalZeit=zeiten.reduce((s,z)=>s+(z.dauer||0),0);
+  const matUsage=DB.getAll('materialUsage').filter(m=>m.auftragId===id);
+  const transitions={neu:['geplant'],geplant:['in_arbeit'],in_arbeit:['abgeschlossen'],abgeschlossen:['abgerechnet']};
+  const nextStates=transitions[a.status]||[];
+  el.innerHTML=`
+  <div class="detail-header">
+    <a href="#/auftraege" style="color:var(--muted);text-decoration:none;font-size:13px">← Zurück</a>
+    <h2 class="mt-8">${a.titel}</h2>
+    <div class="detail-sub">${a.nummer} · ${statusBadge(a.status,AUFTRAG_STATUS)}</div>
+  </div>
+  <div class="card">
+    <div class="row-2 mb-8"><div><label>Kunde</label><strong>${kundeName(a.kundeId)}</strong></div><div><label>Priorität</label><strong>${a.prioritaet||'normal'}</strong></div></div>
+    <div class="mb-8"><label>Adresse</label><div>${a.adresse||'-'}</div></div>
+    <div class="mb-8"><label>Beschreibung</label><div>${a.beschreibung||'-'}</div></div>
+    <div class="row-2 mb-8"><div><label>Geplant</label><div>${fmtDI(a.geplantesDatum)}</div></div><div><label>Projekt</label><div>${a.projektId?DB.getById('projekte',a.projektId)?.name||'-':'-'}</div></div></div>
+    <div class="mb-8"><label>Monteure</label><div class="btn-group">${(a.monteure||[]).map(mid=>`<span class="badge badge-blue">${empName(mid)}</span>`).join('')}${(a.monteure||[]).length===0?'<span class="badge badge-gray">Nicht zugewiesen</span>':''}</div></div>
+    ${canAccess(['GF','BU'])?`<div class="btn-group mt-12">
+      ${nextStates.map(ns=>`<button class="btn btn-primary btn-sm" onclick="changeAuftragStatus('${id}','${ns}')">${AUFTRAG_STATUS[ns].label}</button>`).join('')}
+      <button class="btn btn-sm" onclick="showAuftragForm('${id}')">Bearbeiten</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteAuftrag('${id}')">Löschen</button>
+    </div>`:''}
+    ${isMO()&&a.status==='geplant'?`<button class="btn btn-success btn-block mt-12" onclick="changeAuftragStatus('${id}','in_arbeit')">Arbeit starten</button>`:''}
+  </div>
+  <div class="card"><div class="card-title">Zeiten (${fmtDur(totalZeit)})</div>
+    ${zeiten.length>0?`<table><thead><tr><th>Datum</th><th>Mitarbeiter</th><th>Typ</th><th>Dauer</th><th>Status</th></tr></thead><tbody>
+      ${zeiten.map(z=>`<tr><td>${fmtD(z.start)}</td><td>${empName(z.mitarbeiterId)}</td><td>${z.typ}</td><td>${z.ende?fmtDur(z.dauer):'läuft...'}</td><td>${statusBadge(z.status,ZEIT_STATUS)}</td></tr>`).join('')}
+    </tbody></table>`:'<div class="empty-state"><p>Keine Zeiteinträge</p></div>'}
+  </div>
+  <div class="card"><div class="card-title">Material</div>
+    ${matUsage.length>0?`<table><thead><tr><th>Material</th><th>Menge</th><th>Kosten</th></tr></thead><tbody>
+      ${matUsage.map(m=>{const mat=DB.getById('material',m.materialId);return`<tr><td>${mat?mat.bezeichnung:m.materialId}</td><td>${m.menge} ${mat?.einheit||''}</td><td>${fmt(m.menge*(mat?.verkaufspreis||0))}</td></tr>`;}).join('')}
+    </tbody></table>`:'<div class="empty-state"><p>Kein Materialverbrauch</p></div>'}
+    ${canAccess(['GF','BU','MO'])?`<button class="btn btn-sm mt-8" onclick="showMaterialUsageForm('${id}')">Material buchen</button>`:''}
+  </div>`;
+}
+function changeAuftragStatus(id,newStatus){
+  const a=DB.getById('auftraege',id);
+  if(!a)return;
+  if(newStatus==='geplant'&&(!a.monteure||a.monteure.length===0)){showToast('Bitte erst Monteure zuweisen','error');return;}
+  a.status=newStatus;
+  DB.save('auftraege',a);
+  showToast('Status geändert: '+AUFTRAG_STATUS[newStatus].label,'success');
+  render();
+}
+function deleteAuftrag(id){showConfirm('Auftrag wirklich löschen?',()=>{DB.remove('auftraege',id);location.hash='#/auftraege';render();showToast('Auftrag gelöscht','success');});}
+function showAuftragForm(editId){
+  const a=editId?DB.getById('auftraege',editId):{};
+  const kunden=DB.getAll('kunden');
+  const projekte=DB.getAll('projekte');
+  const monteure=DB.getAll('mitarbeiter').filter(m=>m.rolle==='MO'&&m.aktiv);
+  showModal(editId?'Auftrag bearbeiten':'Neuer Auftrag',`
+    <div class="form-group"><label>Kunde *</label><select id="fAuKunde">${kunden.map(k=>`<option value="${k.id}" ${a.kundeId===k.id?'selected':''}>${k.firma||k.vorname+' '+k.nachname}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Titel *</label><input id="fAuTitel" value="${a.titel||''}"></div>
+    <div class="form-group"><label>Beschreibung</label><textarea id="fAuBesch">${a.beschreibung||''}</textarea></div>
+    <div class="form-group"><label>Adresse</label><input id="fAuAddr" value="${a.adresse||''}"></div>
+    <div class="form-group"><label>Projekt</label><select id="fAuProj"><option value="">-- Kein Projekt --</option>${projekte.map(p=>`<option value="${p.id}" ${a.projektId===p.id?'selected':''}>${p.name}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Geplantes Datum</label><input type="date" id="fAuDatum" value="${a.geplantesDatum||today()}"></div>
+    <div class="form-group"><label>Priorität</label><select id="fAuPrio"><option value="niedrig" ${a.prioritaet==='niedrig'?'selected':''}>Niedrig</option><option value="normal" ${!a.prioritaet||a.prioritaet==='normal'?'selected':''}>Normal</option><option value="hoch" ${a.prioritaet==='hoch'?'selected':''}>Hoch</option><option value="dringend" ${a.prioritaet==='dringend'?'selected':''}>Dringend</option></select></div>
+    <div class="form-group"><label>Monteure</label>${monteure.map(m=>`<label style="display:flex;align-items:center;gap:6px;margin:4px 0;font-size:13px;color:var(--text)"><input type="checkbox" class="fAuMont" value="${m.id}" ${(a.monteure||[]).includes(m.id)?'checked':''}>${m.vorname} ${m.nachname}</label>`).join('')}</div>
+    <button class="btn btn-primary btn-block mt-12" onclick="saveAuftrag('${editId||''}')">Speichern</button>
+  `);
+}
+function saveAuftrag(editId){
+  const titel=document.getElementById('fAuTitel').value.trim();
+  if(!titel){showToast('Titel ist erforderlich','error');return;}
+  const monteure=[...document.querySelectorAll('.fAuMont:checked')].map(c=>c.value);
+  const data=editId?DB.getById('auftraege',editId):{id:DB.genId('AU'),nummer:DB.nextNr('AU'),status:'neu'};
+  data.kundeId=document.getElementById('fAuKunde').value;
+  data.titel=titel;
+  data.beschreibung=document.getElementById('fAuBesch').value;
+  data.adresse=document.getElementById('fAuAddr').value;
+  data.projektId=document.getElementById('fAuProj').value||null;
+  data.geplantesDatum=document.getElementById('fAuDatum').value;
+  data.prioritaet=document.getElementById('fAuPrio').value;
+  data.monteure=monteure;
+  DB.save('auftraege',data);
+  closeModal();
+  showToast(editId?'Auftrag aktualisiert':'Auftrag erstellt','success');
+  if(editId)location.hash='#/auftraege/'+editId;
+  render();
+}
+function showMaterialUsageForm(auftragId){
+  const materials=DB.getAll('material').filter(m=>m.bestand>0);
+  showModal('Material buchen',`
+    <div class="form-group"><label>Material</label><select id="fMatId">${materials.map(m=>`<option value="${m.id}">${m.bezeichnung} (Bestand: ${m.bestand})</option>`).join('')}</select></div>
+    <div class="form-group"><label>Menge</label><input type="number" id="fMatMenge" value="1" min="1"></div>
+    <button class="btn btn-primary btn-block mt-8" onclick="saveMaterialUsage('${auftragId}')">Buchen</button>
+  `);
+}
+function saveMaterialUsage(auftragId){
+  const matId=document.getElementById('fMatId').value;
+  const menge=parseInt(document.getElementById('fMatMenge').value);
+  if(!matId||!menge||menge<1){showToast('Ungültige Eingabe','error');return;}
+  const mat=DB.getById('material',matId);
+  if(mat.bestand<menge){showToast('Nicht genug auf Lager','error');return;}
+  mat.bestand-=menge;
+  DB.save('material',mat);
+  DB.save('materialUsage',{id:DB.genId('MU'),auftragId,materialId:matId,menge,datum:Date.now(),mitarbeiterId:currentUser.id});
+  closeModal();
+  showToast('Material gebucht','success');
+  render();
+}
+
+/* ===== SECTION 5: KUNDEN ===== */
+function renderKunden(el,param){
+  if(param) return renderKundeDetail(el,param);
+  const kunden=DB.getAll('kunden');
+  el.innerHTML=`
+  <h2 class="mb-12">Kunden</h2>
+  <div class="search-bar"><input id="searchKunden" placeholder="Name, Ort, Telefon..." oninput="filterKunden()"></div>
+  <div class="card" id="kundenListe">
+    ${kunden.map(k=>`
+      <div class="list-item" onclick="location.hash='#/kunden/${k.id}'" data-search="${(k.firma+k.vorname+k.nachname+k.ort+k.telefon).toLowerCase()}">
+        <div class="list-item-main">
+          <div class="list-item-title">${k.firma||k.vorname+' '+k.nachname}</div>
+          <div class="list-item-sub">${k.strasse}, ${k.plz} ${k.ort} · ${k.telefon}</div>
+        </div>
+        <span class="badge ${k.typ==='gewerbe'?'badge-blue':'badge-gray'}">${k.typ==='gewerbe'?'Gewerbe':'Privat'}</span>
+      </div>`).join('')}
+    ${kunden.length===0?'<div class="empty-state"><p>Keine Kunden vorhanden</p></div>':''}
+  </div>
+  <button class="fab" onclick="showKundeForm()">+</button>`;
+}
+function filterKunden(){
+  const q=document.getElementById('searchKunden').value.toLowerCase();
+  document.querySelectorAll('#kundenListe .list-item').forEach(item=>{
+    item.style.display=item.dataset.search.includes(q)?'':'none';
+  });
+}
+function renderKundeDetail(el,id){
+  const k=DB.getById('kunden',id);
+  if(!k){el.innerHTML='<div class="empty-state"><p>Kunde nicht gefunden</p></div>';return;}
+  const auftraege=DB.getAll('auftraege').filter(a=>a.kundeId===id);
+  const angebote=DB.getAll('angebote').filter(a=>a.kundeId===id);
+  const rechnungen=DB.getAll('rechnungen').filter(r=>r.kundeId===id);
+  el.innerHTML=`
+  <div class="detail-header">
+    <a href="#/kunden" style="color:var(--muted);text-decoration:none;font-size:13px">← Zurück</a>
+    <h2 class="mt-8">${k.firma||k.vorname+' '+k.nachname}</h2>
+    <div class="detail-sub">${k.typ==='gewerbe'?'Gewerblich':'Privatkunde'}</div>
+  </div>
+  <div class="card">
+    <div class="row-2 mb-8"><div><label>Ansprechpartner</label><div>${k.anrede} ${k.vorname} ${k.nachname}</div></div><div><label>Telefon</label><div>${k.telefon}</div></div></div>
+    <div class="row-2 mb-8"><div><label>Adresse</label><div>${k.strasse}<br>${k.plz} ${k.ort}</div></div><div><label>E-Mail</label><div>${k.email||'-'}</div></div></div>
+    ${k.notizen?`<div class="mb-8"><label>Notizen</label><div>${k.notizen}</div></div>`:''}
+    <div class="btn-group mt-8">
+      <button class="btn btn-sm" onclick="showKundeForm('${id}')">Bearbeiten</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteKunde('${id}')">Löschen</button>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">Aufträge (${auftraege.length})</div>
+    ${auftraege.map(a=>`<div class="list-item" onclick="location.hash='#/auftraege/${a.id}'"><div class="list-item-main"><div class="list-item-title">${a.titel}</div><div class="list-item-sub">${a.nummer}</div></div>${statusBadge(a.status,AUFTRAG_STATUS)}</div>`).join('')}
+    ${auftraege.length===0?'<p style="color:var(--muted);font-size:13px">Keine Aufträge</p>':''}
+  </div>
+  <div class="card"><div class="card-title">Angebote (${angebote.length})</div>
+    ${angebote.map(a=>`<div class="list-item" onclick="location.hash='#/angebote/${a.id}'"><div class="list-item-main"><div class="list-item-title">${a.betreff}</div><div class="list-item-sub">${a.nummer} · ${fmt(calcPositionen(a.positionen).brutto)}</div></div>${statusBadge(a.status,ANGEBOT_STATUS)}</div>`).join('')}
+    ${angebote.length===0?'<p style="color:var(--muted);font-size:13px">Keine Angebote</p>':''}
+  </div>
+  <div class="card"><div class="card-title">Rechnungen (${rechnungen.length})</div>
+    ${rechnungen.map(r=>`<div class="list-item" onclick="location.hash='#/rechnungen/${r.id}'"><div class="list-item-main"><div class="list-item-title">${r.nummer}</div><div class="list-item-sub">${fmt(calcPositionen(r.positionen).brutto)}</div></div>${statusBadge(r.status,RECHNUNG_STATUS)}</div>`).join('')}
+    ${rechnungen.length===0?'<p style="color:var(--muted);font-size:13px">Keine Rechnungen</p>':''}
+  </div>`;
+}
+function showKundeForm(editId){
+  const k=editId?DB.getById('kunden',editId):{typ:'privat'};
+  showModal(editId?'Kunde bearbeiten':'Neuer Kunde',`
+    <div class="form-group"><label>Typ</label><select id="fKTyp" onchange="document.getElementById('fKFirmaGrp').style.display=this.value==='gewerbe'?'block':'none'"><option value="privat" ${k.typ==='privat'?'selected':''}>Privat</option><option value="gewerbe" ${k.typ==='gewerbe'?'selected':''}>Gewerbe</option></select></div>
+    <div class="form-group" id="fKFirmaGrp" style="display:${k.typ==='gewerbe'?'block':'none'}"><label>Firma</label><input id="fKFirma" value="${k.firma||''}"></div>
+    <div class="row-2"><div class="form-group"><label>Anrede</label><select id="fKAnrede"><option value="Herr" ${k.anrede==='Herr'?'selected':''}>Herr</option><option value="Frau" ${k.anrede==='Frau'?'selected':''}>Frau</option></select></div><div></div></div>
+    <div class="row-2"><div class="form-group"><label>Vorname *</label><input id="fKVorname" value="${k.vorname||''}"></div><div class="form-group"><label>Nachname *</label><input id="fKNachname" value="${k.nachname||''}"></div></div>
+    <div class="form-group"><label>Straße</label><input id="fKStrasse" value="${k.strasse||''}"></div>
+    <div class="row-2"><div class="form-group"><label>PLZ</label><input id="fKPlz" maxlength="5" value="${k.plz||''}"></div><div class="form-group"><label>Ort</label><input id="fKOrt" value="${k.ort||''}"></div></div>
+    <div class="row-2"><div class="form-group"><label>Telefon</label><input id="fKTel" value="${k.telefon||''}"></div><div class="form-group"><label>E-Mail</label><input id="fKEmail" type="email" value="${k.email||''}"></div></div>
+    <div class="form-group"><label>Notizen</label><textarea id="fKNotiz">${k.notizen||''}</textarea></div>
+    <button class="btn btn-primary btn-block mt-8" onclick="saveKunde('${editId||''}')">Speichern</button>
+  `);
+}
+function saveKunde(editId){
+  const vorname=document.getElementById('fKVorname').value.trim();
+  const nachname=document.getElementById('fKNachname').value.trim();
+  if(!vorname||!nachname){showToast('Name ist erforderlich','error');return;}
+  const data=editId?DB.getById('kunden',editId):{id:DB.genId('KU')};
+  data.typ=document.getElementById('fKTyp').value;
+  data.firma=document.getElementById('fKFirma').value.trim();
+  data.anrede=document.getElementById('fKAnrede').value;
+  data.vorname=vorname;data.nachname=nachname;
+  data.strasse=document.getElementById('fKStrasse').value;
+  data.plz=document.getElementById('fKPlz').value;data.ort=document.getElementById('fKOrt').value;
+  data.telefon=document.getElementById('fKTel').value;data.email=document.getElementById('fKEmail').value;
+  data.notizen=document.getElementById('fKNotiz').value;
+  DB.save('kunden',data);
+  closeModal();showToast(editId?'Kunde aktualisiert':'Kunde erstellt','success');render();
+}
+function deleteKunde(id){
+  const has=DB.getAll('auftraege').some(a=>a.kundeId===id)||DB.getAll('rechnungen').some(r=>r.kundeId===id);
+  if(has){showToast('Kunde hat verknüpfte Daten – Löschen nicht möglich','error');return;}
+  showConfirm('Kunde wirklich löschen?',()=>{DB.remove('kunden',id);location.hash='#/kunden';render();showToast('Kunde gelöscht','success');});
+}
+
+/* ===== SECTION 6: ZEITERFASSUNG ===== */
+function renderZeit(el){
+  if(isMO()) return renderZeitMO(el);
+  renderZeitBU(el);
+}
+function renderZeitMO(el){
+  const logs=DB.getAll('zeitlog').filter(z=>z.mitarbeiterId===currentUser.id).sort((a,b)=>b.start-a.start);
+  const todayStr=today();
+  const todayLogs=logs.filter(z=>new Date(z.start).toISOString().split('T')[0]===todayStr);
+  const totalWork=todayLogs.filter(z=>z.typ==='arbeit'&&z.dauer).reduce((s,z)=>s+z.dauer,0);
+  const totalPause=todayLogs.filter(z=>z.typ==='pause'&&z.dauer).reduce((s,z)=>s+z.dauer,0);
+  const activeTimer=logs.find(z=>!z.ende);
+  const meineAuftraege=DB.getAll('auftraege').filter(a=>a.monteure&&a.monteure.includes(currentUser.id)&&(a.status==='geplant'||a.status==='in_arbeit'));
+
+  el.innerHTML=`
+  <h2 class="mb-12">Zeiterfassung</h2>
+  ${activeTimer?`
+    <div class="card" style="border-color:var(--green2)">
+      <div class="card-title" style="color:var(--green2)">Timer läuft – ${activeTimer.typ==='arbeit'?'Arbeitszeit':activeTimer.typ==='pause'?'Pause':'Fahrtzeit'}</div>
+      <div class="timer-display timer-active" id="activeTimerDisplay">--:--:--</div>
+      <button class="btn btn-danger btn-block" onclick="stopTimer()">Stopp</button>
+    </div>`:`
+    <div class="card">
+      <div class="card-title">Neuer Eintrag</div>
+      <div class="form-group"><label>Auftrag</label><select id="timerAuftrag">
+        <option value="">-- Auftrag wählen --</option>
+        ${meineAuftraege.map(a=>`<option value="${a.id}">${a.nummer} – ${a.titel}</option>`).join('')}
+      </select></div>
+      <div class="btn-group">
+        <button class="btn btn-success" onclick="startTimer('arbeit')">Arbeitszeit</button>
+        <button class="btn btn-warning" onclick="startTimer('fahrt')">Fahrtzeit</button>
+        <button class="btn" onclick="startTimer('pause')">Pause</button>
+      </div>
+    </div>`}
+  <div class="card">
+    <div class="card-title">Heute</div>
+    <div class="row-2 mb-8"><div class="kpi-card"><div class="kpi-value" style="font-size:16px">${fmtDur(totalWork)}</div><div class="kpi-label">Arbeitszeit</div></div><div class="kpi-card"><div class="kpi-value" style="font-size:16px">${fmtDur(totalPause)}</div><div class="kpi-label">Pause</div></div></div>
+    ${todayLogs.map(z=>`<div class="list-item"><div class="list-item-main"><div class="list-item-title">${z.typ==='arbeit'?'Arbeitszeit':z.typ==='pause'?'Pause':'Fahrtzeit'}</div><div class="list-item-sub">${fmtT(z.start)} – ${z.ende?fmtT(z.ende):'läuft'} ${z.auftragId?'· '+DB.getById('auftraege',z.auftragId)?.titel||'':''}</div></div><div>${z.ende?fmtDur(z.dauer):''} ${statusBadge(z.status,ZEIT_STATUS)}</div></div>`).join('')}
+    ${todayLogs.length===0?'<p style="color:var(--muted);font-size:13px;text-align:center;padding:12px">Noch keine Einträge heute</p>':''}
+  </div>`;
+  if(activeTimer) startTimerDisplay(activeTimer.start);
+}
+function renderZeitBU(el){
+  const allLogs=DB.getAll('zeitlog').sort((a,b)=>b.start-a.start);
+  const mitarbeiter=DB.getAll('mitarbeiter').filter(m=>m.rolle==='MO'&&m.aktiv);
+  el.innerHTML=`
+  <h2 class="mb-12">Zeiterfassung – Übersicht</h2>
+  <div class="card">
+    <div class="row-2 mb-8">
+      <div class="form-group"><label>Mitarbeiter</label><select id="zeitFilterMa" onchange="filterZeitLogs()"><option value="">Alle</option>${mitarbeiter.map(m=>`<option value="${m.id}">${m.vorname} ${m.nachname}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Status</label><select id="zeitFilterStatus" onchange="filterZeitLogs()"><option value="">Alle</option><option value="offen">Offen</option><option value="genehmigt">Genehmigt</option><option value="abgelehnt">Abgelehnt</option></select></div>
+    </div>
+  </div>
+  <div class="card" id="zeitLogListe">
+    <table><thead><tr><th>Datum</th><th>Mitarbeiter</th><th>Typ</th><th>Dauer</th><th>Status</th><th></th></tr></thead><tbody>
+    ${allLogs.slice(0,50).map(z=>`<tr data-ma="${z.mitarbeiterId}" data-status="${z.status}">
+      <td>${fmtD(z.start)}</td><td>${empName(z.mitarbeiterId)}</td><td>${z.typ}</td><td>${z.ende?fmtDur(z.dauer):'läuft'}</td>
+      <td>${statusBadge(z.status,ZEIT_STATUS)}</td>
+      <td>${z.status==='offen'?`<button class="btn btn-success btn-sm" onclick="approveZeit('${z.id}','genehmigt')">✓</button><button class="btn btn-danger btn-sm" onclick="approveZeit('${z.id}','abgelehnt')">✗</button>`:''}</td>
+    </tr>`).join('')}
+    </tbody></table>
+    ${allLogs.length===0?'<div class="empty-state"><p>Keine Zeiteinträge</p></div>':''}
+  </div>`;
+}
+function filterZeitLogs(){
+  const ma=document.getElementById('zeitFilterMa').value;
+  const st=document.getElementById('zeitFilterStatus').value;
+  document.querySelectorAll('#zeitLogListe tbody tr').forEach(tr=>{
+    const matchMa=!ma||tr.dataset.ma===ma;
+    const matchSt=!st||tr.dataset.status===st;
+    tr.style.display=matchMa&&matchSt?'':'none';
+  });
+}
+function approveZeit(id,status){
+  const z=DB.getById('zeitlog',id);
+  if(!z)return;
+  z.status=status;
+  DB.save('zeitlog',z);
+  showToast(status==='genehmigt'?'Genehmigt':'Abgelehnt','success');
+  render();
+}
+
+/* ===== SECTION 7: ANGEBOTE ===== */
+function renderAngebote(el,param){
+  if(param) return renderAngebotDetail(el,param);
+  const angebote=DB.getAll('angebote');
+  el.innerHTML=`
+  <h2 class="mb-12">Angebote</h2>
+  <div class="filter-chips">
+    ${['alle','erstellt','versendet','angenommen','abgelehnt'].map(f=>`<span class="chip ${f==='alle'?'active':''}" onclick="filterAngeboteByStatus(this,'${f}')">${f==='alle'?'Alle':(ANGEBOT_STATUS[f]?.label||f)}</span>`).join('')}
+  </div>
+  <div class="card" id="angeboteListe">
+    ${angebote.sort((a,b)=>(b.erstellt||0)-(a.erstellt||0)).map(a=>{
+      const s=calcPositionen(a.positionen);
+      return`<div class="list-item" onclick="location.hash='#/angebote/${a.id}'" data-status="${a.status}">
+        <div class="list-item-main"><div class="list-item-title">${a.betreff}</div><div class="list-item-sub">${a.nummer} · ${kundeName(a.kundeId)} · ${fmt(s.brutto)}</div></div>
+        ${statusBadge(a.status,ANGEBOT_STATUS)}
+      </div>`;}).join('')}
+    ${angebote.length===0?'<div class="empty-state"><p>Keine Angebote vorhanden</p></div>':''}
+  </div>
+  <button class="fab" onclick="showAngebotForm()">+</button>`;
+}
+function filterAngeboteByStatus(chip,status){
+  document.querySelectorAll('.filter-chips .chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  document.querySelectorAll('#angeboteListe .list-item').forEach(item=>{
+    item.style.display=status==='alle'||item.dataset.status===status?'':'none';
+  });
+}
+function renderAngebotDetail(el,id){
+  const a=DB.getById('angebote',id);
+  if(!a){el.innerHTML='<div class="empty-state"><p>Angebot nicht gefunden</p></div>';return;}
+  const s=calcPositionen(a.positionen);
+  const settings=DB.settings();
+  el.innerHTML=`
+  <div class="detail-header">
+    <a href="#/angebote" style="color:var(--muted);text-decoration:none;font-size:13px">← Zurück</a>
+    <h2 class="mt-8">${a.betreff}</h2>
+    <div class="detail-sub">${a.nummer} · ${statusBadge(a.status,ANGEBOT_STATUS)} · Gültig bis ${fmtDI(a.gueltigBis)}</div>
+  </div>
+  <div class="card">
+    <div class="mb-8"><label>Kunde</label><strong>${kundeName(a.kundeId)}</strong></div>
+    <table class="line-items"><thead><tr><th>Pos</th><th>Bezeichnung</th><th>Einheit</th><th class="text-right">Menge</th><th class="text-right">Einzelpreis</th><th class="text-right">Gesamt</th></tr></thead><tbody>
+    ${a.positionen.map(p=>`<tr><td>${p.pos}</td><td>${p.bezeichnung}</td><td>${p.einheit}</td><td class="text-right">${fmtN(p.menge)}</td><td class="text-right">${fmt(p.einzelpreis)}</td><td class="text-right">${fmt(p.menge*p.einzelpreis)}</td></tr>`).join('')}
+    </tbody></table>
+    <table class="sum-table mt-8"><tr><td>Netto</td><td class="text-right">${fmt(s.netto)}</td></tr><tr><td>MwSt 19%</td><td class="text-right">${fmt(s.mwst)}</td></tr><tr class="total"><td><strong>Brutto</strong></td><td class="text-right"><strong>${fmt(s.brutto)}</strong></td></tr></table>
+  </div>
+  <div class="card">
+    <div class="card-title">Aktionen</div>
+    <div class="btn-group">
+      ${a.status==='erstellt'?`<button class="btn btn-primary btn-sm" onclick="changeAngebotStatus('${id}','versendet')">Als versendet markieren</button><button class="btn btn-sm" onclick="showAngebotForm('${id}')">Bearbeiten</button>`:''}
+      ${a.status==='versendet'?`<button class="btn btn-success btn-sm" onclick="changeAngebotStatus('${id}','angenommen')">Angenommen</button><button class="btn btn-danger btn-sm" onclick="changeAngebotStatus('${id}','abgelehnt')">Abgelehnt</button>`:''}
+      ${a.status==='angenommen'?`<button class="btn btn-primary btn-sm" onclick="angebotToAuftrag('${id}')">Auftrag erstellen</button>`:''}
+      <button class="btn btn-sm" onclick="printAngebot('${id}')">Drucken</button>
+      <button class="btn btn-danger btn-sm" onclick="showConfirm('Angebot löschen?',()=>{DB.remove('angebote','${id}');location.hash='#/angebote';render();})">Löschen</button>
+    </div>
+  </div>`;
+}
+function changeAngebotStatus(id,status){
+  const a=DB.getById('angebote',id);a.status=status;DB.save('angebote',a);
+  showToast('Status: '+ANGEBOT_STATUS[status].label,'success');render();
+}
+function angebotToAuftrag(angId){
+  const a=DB.getById('angebote',angId);
+  const kunde=DB.getById('kunden',a.kundeId);
+  const au={id:DB.genId('AU'),nummer:DB.nextNr('AU'),kundeId:a.kundeId,projektId:null,titel:a.betreff,beschreibung:'Aus Angebot '+a.nummer,adresse:kunde?kunde.strasse+', '+kunde.plz+' '+kunde.ort:'',status:'neu',prioritaet:'normal',monteure:[],geplantesDatum:today(),angebotId:angId};
+  DB.save('auftraege',au);
+  showToast('Auftrag '+au.nummer+' erstellt','success');
+  location.hash='#/auftraege/'+au.id;render();
+}
+let angebotPositionen=[];
+function showAngebotForm(editId){
+  const a=editId?DB.getById('angebote',editId):{};
+  angebotPositionen=a.positionen?JSON.parse(JSON.stringify(a.positionen)):[{pos:1,bezeichnung:'',einheit:'Stk',menge:1,einzelpreis:0}];
+  const kunden=DB.getAll('kunden');
+  const d=new Date();d.setDate(d.getDate()+30);
+  showModal(editId?'Angebot bearbeiten':'Neues Angebot',`
+    <div class="form-group"><label>Kunde *</label><select id="fAngKunde">${kunden.map(k=>`<option value="${k.id}" ${a.kundeId===k.id?'selected':''}>${k.firma||k.vorname+' '+k.nachname}</option>`).join('')}</select></div>
+    <div class="form-group"><label>Betreff *</label><input id="fAngBetreff" value="${a.betreff||''}"></div>
+    <div class="form-group"><label>Gültig bis</label><input type="date" id="fAngGueltig" value="${a.gueltigBis||d.toISOString().split('T')[0]}"></div>
+    <div class="form-group"><label>Positionen</label><div id="positionenContainer"></div>
+    <button class="btn btn-sm mt-8" onclick="addPosition()">+ Position</button>
+    <button class="btn btn-sm mt-8" onclick="showMaterialPicker()">+ Aus Materialkatalog</button></div>
+    <div id="positionenSumme" class="mt-8"></div>
+    <button class="btn btn-primary btn-block mt-12" onclick="saveAngebot('${editId||''}')">Speichern</button>
+  `,true);
+  renderPositionen();
+}
+function renderPositionen(){
+  const c=document.getElementById('positionenContainer');
+  if(!c)return;
+  c.innerHTML=`<table class="line-items"><thead><tr><th style="width:30px">Pos</th><th>Bezeichnung</th><th style="width:60px">Einheit</th><th style="width:60px">Menge</th><th style="width:80px">Preis</th><th style="width:30px"></th></tr></thead><tbody>
+  ${angebotPositionen.map((p,i)=>`<tr>
+    <td>${p.pos}</td>
+    <td><input value="${p.bezeichnung}" onchange="angebotPositionen[${i}].bezeichnung=this.value"></td>
+    <td><select onchange="angebotPositionen[${i}].einheit=this.value">${['Stk','Std','m','m²','psch','Set','Rolle','L'].map(e=>`<option ${p.einheit===e?'selected':''}>${e}</option>`).join('')}</select></td>
+    <td><input type="number" step="0.01" value="${p.menge}" onchange="angebotPositionen[${i}].menge=parseFloat(this.value)||0;updatePosSum()"></td>
+    <td><input type="number" step="0.01" value="${p.einzelpreis}" onchange="angebotPositionen[${i}].einzelpreis=parseFloat(this.value)||0;updatePosSum()"></td>
+    <td><button class="btn-sm btn-danger btn" onclick="angebotPositionen.splice(${i},1);angebotPositionen.forEach((p,j)=>p.pos=j+1);renderPositionen()">×</button></td>
+  </tr>`).join('')}
+  </tbody></table>`;
+  updatePosSum();
+}
+function updatePosSum(){
+  const s=calcPositionen(angebotPositionen);
+  const el=document.getElementById('positionenSumme');
+  if(el) el.innerHTML=`<table class="sum-table"><tr><td>Netto</td><td class="text-right">${fmt(s.netto)}</td></tr><tr><td>MwSt 19%</td><td class="text-right">${fmt(s.mwst)}</td></tr><tr class="total"><td><strong>Brutto</strong></td><td class="text-right"><strong>${fmt(s.brutto)}</strong></td></tr></table>`;
+}
+function addPosition(){
+  angebotPositionen.push({pos:angebotPositionen.length+1,bezeichnung:'',einheit:'Stk',menge:1,einzelpreis:0});
+  renderPositionen();
+}
+function showMaterialPicker(){
+  const mats=DB.getAll('material').filter(m=>m.verkaufspreis>0);
+  showModal('Material wählen',`
+    <div class="search-bar"><input id="matPickerSearch" placeholder="Suchen..." oninput="filterMatPicker()"></div>
+    <div id="matPickerList">${mats.map(m=>`
+      <div class="list-item" data-search="${m.bezeichnung.toLowerCase()}" onclick="pickMaterial('${m.id}')">
+        <div class="list-item-main"><div class="list-item-title">${m.bezeichnung}</div><div class="list-item-sub">${m.artikelNr} · ${m.kategorie} · ${fmt(m.verkaufspreis)}</div></div>
+      </div>`).join('')}
+    </div>
+  `);
+}
+function filterMatPicker(){
+  const q=document.getElementById('matPickerSearch').value.toLowerCase();
+  document.querySelectorAll('#matPickerList .list-item').forEach(item=>{item.style.display=item.dataset.search.includes(q)?'':'none';});
+}
+function pickMaterial(matId){
+  const m=DB.getById('material',matId);
+  angebotPositionen.push({pos:angebotPositionen.length+1,bezeichnung:m.bezeichnung,einheit:m.einheit,menge:1,einzelpreis:m.verkaufspreis});
+  closeModal();
+  showAngebotForm._reopenTimer=setTimeout(()=>{renderPositionen();},100);
+  renderPositionen();
+}
+function saveAngebot(editId){
+  const betreff=document.getElementById('fAngBetreff').value.trim();
+  if(!betreff){showToast('Betreff ist erforderlich','error');return;}
+  if(angebotPositionen.length===0){showToast('Mindestens eine Position','error');return;}
+  const data=editId?DB.getById('angebote',editId):{id:DB.genId('ANG'),nummer:DB.nextNr('ANG'),status:'erstellt'};
+  data.kundeId=document.getElementById('fAngKunde').value;
+  data.betreff=betreff;
+  data.positionen=angebotPositionen.filter(p=>p.bezeichnung);
+  data.gueltigBis=document.getElementById('fAngGueltig').value;
+  DB.save('angebote',data);
+  closeModal();showToast(editId?'Angebot aktualisiert':'Angebot erstellt','success');
+  location.hash='#/angebote/'+data.id;render();
+}
+function printAngebot(id){
+  const a=DB.getById('angebote',id);const k=DB.getById('kunden',a.kundeId);const s=calcPositionen(a.positionen);const st=DB.settings();
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>${a.nummer}</title><style>body{font-family:Arial,sans-serif;padding:20mm;color:#000;font-size:12px}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{border:1px solid #ccc;padding:6px;text-align:left}th{background:#f0f0f0}.right{text-align:right}.sum{margin-left:auto;width:250px;border:none}.sum td{border:none;padding:4px 8px}.total{font-weight:bold;border-top:2px solid #000!important}</style></head><body>
+  <div style="margin-bottom:24px"><strong>${st.name}</strong><br>${st.strasse}<br>${st.plz} ${st.ort}<br>Tel: ${st.telefon}<br>${st.email}</div>
+  <div style="margin-bottom:24px">${k?`${k.firma?k.firma+'<br>':''}${k.anrede} ${k.vorname} ${k.nachname}<br>${k.strasse}<br>${k.plz} ${k.ort}`:''}</div>
+  <h1>Angebot ${a.nummer}</h1><p>Datum: ${fmtD(a.erstellt)} · Gültig bis: ${fmtDI(a.gueltigBis)}</p><p><strong>${a.betreff}</strong></p>
+  <table><thead><tr><th>Pos</th><th>Bezeichnung</th><th>Einheit</th><th class="right">Menge</th><th class="right">Einzelpreis</th><th class="right">Gesamt</th></tr></thead><tbody>
+  ${a.positionen.map(p=>`<tr><td>${p.pos}</td><td>${p.bezeichnung}</td><td>${p.einheit}</td><td class="right">${fmtN(p.menge)}</td><td class="right">${fmt(p.einzelpreis)}</td><td class="right">${fmt(p.menge*p.einzelpreis)}</td></tr>`).join('')}
+  </tbody></table>
+  <table class="sum"><tr><td>Nettobetrag</td><td class="right">${fmt(s.netto)}</td></tr><tr><td>MwSt 19%</td><td class="right">${fmt(s.mwst)}</td></tr><tr class="total"><td>Bruttobetrag</td><td class="right">${fmt(s.brutto)}</td></tr></table>
+  </body></html>`);
+  w.document.close();w.print();
+}
+
+/* ===== SECTION 8: RECHNUNGEN ===== */
+function renderRechnungen(el,param){
+  if(param) return renderRechnungDetail(el,param);
+  const rechnungen=DB.getAll('rechnungen');
+  // auto-detect overdue
+  const now=new Date();
+  rechnungen.forEach(r=>{if(r.status==='versendet'&&r.zahlungsziel&&new Date(r.zahlungsziel)<now){r.status='ueberfaellig';DB.save('rechnungen',r);}});
+  const offenSumme=rechnungen.filter(r=>r.status==='versendet'||r.status==='ueberfaellig').reduce((s,r)=>s+calcPositionen(r.positionen).brutto,0);
+  el.innerHTML=`
+  <h2 class="mb-12">Rechnungen</h2>
+  ${offenSumme>0?`<div class="card" style="border-color:var(--orange2)"><div class="flex flex-between flex-center"><span>Offene Posten gesamt</span><strong style="color:var(--orange2)">${fmt(offenSumme)}</strong></div></div>`:''}
+  <div class="filter-chips">
+    ${['alle','erstellt','versendet','bezahlt','ueberfaellig'].map(f=>`<span class="chip ${f==='alle'?'active':''}" onclick="filterRechnungenByStatus(this,'${f}')">${f==='alle'?'Alle':(RECHNUNG_STATUS[f]?.label||f)}</span>`).join('')}
+  </div>
+  <div class="card" id="rechnungenListe">
+    ${rechnungen.sort((a,b)=>(b.erstellt||0)-(a.erstellt||0)).map(r=>{const s=calcPositionen(r.positionen);return`
+      <div class="list-item" onclick="location.hash='#/rechnungen/${r.id}'" data-status="${r.status}">
+        <div class="list-item-main"><div class="list-item-title">${r.nummer} · ${kundeName(r.kundeId)}</div><div class="list-item-sub">${fmt(s.brutto)} · Fällig: ${fmtDI(r.zahlungsziel)}</div></div>
+        ${statusBadge(r.status,RECHNUNG_STATUS)}
+      </div>`;}).join('')}
+    ${rechnungen.length===0?'<div class="empty-state"><p>Keine Rechnungen vorhanden</p></div>':''}
+  </div>
+  <button class="fab" onclick="showRechnungForm()">+</button>`;
+}
+function filterRechnungenByStatus(chip,status){
+  document.querySelectorAll('.filter-chips .chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  document.querySelectorAll('#rechnungenListe .list-item').forEach(item=>{
+    item.style.display=status==='alle'||item.dataset.status===status?'':'none';
+  });
+}
+function renderRechnungDetail(el,id){
+  const r=DB.getById('rechnungen',id);
+  if(!r){el.innerHTML='<div class="empty-state"><p>Rechnung nicht gefunden</p></div>';return;}
+  const s=calcPositionen(r.positionen);const st=DB.settings();
+  el.innerHTML=`
+  <div class="detail-header">
+    <a href="#/rechnungen" style="color:var(--muted);text-decoration:none;font-size:13px">← Zurück</a>
+    <h2 class="mt-8">Rechnung ${r.nummer}</h2>
+    <div class="detail-sub">${statusBadge(r.status,RECHNUNG_STATUS)} · ${kundeName(r.kundeId)}</div>
+  </div>
+  <div class="card">
+    <div class="row-2 mb-8"><div><label>Rechnungsdatum</label><div>${fmtD(r.erstellt)}</div></div><div><label>Zahlungsziel</label><div>${fmtDI(r.zahlungsziel)}</div></div></div>
+    ${r.leistungsdatum?`<div class="mb-8"><label>Leistungsdatum</label><div>${fmtDI(r.leistungsdatum)}</div></div>`:''}
+    <table class="line-items"><thead><tr><th>Pos</th><th>Bezeichnung</th><th>Einheit</th><th class="text-right">Menge</th><th class="text-right">Einzelpreis</th><th class="text-right">Gesamt</th></tr></thead><tbody>
+    ${r.positionen.map(p=>`<tr><td>${p.pos}</td><td>${p.bezeichnung}</td><td>${p.einheit}</td><td class="text-right">${fmtN(p.menge)}</td><td class="text-right">${fmt(p.einzelpreis)}</td><td class="text-right">${fmt(p.menge*p.einzelpreis)}</td></tr>`).join('')}
+    </tbody></table>
+    <table class="sum-table mt-8"><tr><td>Netto</td><td class="text-right">${fmt(s.netto)}</td></tr><tr><td>MwSt 19%</td><td class="text-right">${fmt(s.mwst)}</td></tr><tr class="total"><td><strong>Brutto</strong></td><td class="text-right"><strong>${fmt(s.brutto)}</strong></td></tr></table>
+    ${r.bezahltAm?`<div class="mt-8" style="color:var(--green2)">Bezahlt am ${fmtDI(r.bezahltAm)}: ${fmt(r.bezahltBetrag)}</div>`:''}
+  </div>
+  <div class="card"><div class="card-title">Aktionen</div><div class="btn-group">
+    ${r.status==='erstellt'?`<button class="btn btn-primary btn-sm" onclick="changeRechnungStatus('${id}','versendet')">Als versendet markieren</button><button class="btn btn-sm" onclick="showRechnungForm('${id}')">Bearbeiten</button>`:''}
+    ${r.status==='versendet'||r.status==='ueberfaellig'?`<button class="btn btn-success btn-sm" onclick="showZahlungForm('${id}')">Zahlung erfassen</button>`:''}
+    <button class="btn btn-sm" onclick="printRechnung('${id}')">Drucken</button>
+    ${r.status==='erstellt'?`<button class="btn btn-danger btn-sm" onclick="showConfirm('Rechnung löschen?',()=>{DB.remove('rechnungen','${id}');location.hash='#/rechnungen';render();})">Löschen</button>`:''}
+  </div></div>
+  <div class="card" style="font-size:11px;color:var(--muted)">
+    <strong>Bankverbindung:</strong> ${st.bank} · IBAN: ${st.iban} · BIC: ${st.bic}<br>
+    <strong>Steuernummer:</strong> ${st.steuernr} · <strong>USt-IdNr:</strong> ${st.ustid}
+  </div>`;
+}
+function changeRechnungStatus(id,status){
+  const r=DB.getById('rechnungen',id);r.status=status;DB.save('rechnungen',r);
+  showToast('Status: '+RECHNUNG_STATUS[status].label,'success');render();
+}
+function showZahlungForm(id){
+  const r=DB.getById('rechnungen',id);const s=calcPositionen(r.positionen);
+  showModal('Zahlung erfassen',`
+    <div class="form-group"><label>Betrag</label><input type="number" step="0.01" id="fZahlBetrag" value="${s.brutto.toFixed(2)}"></div>
+    <div class="form-group"><label>Datum</label><input type="date" id="fZahlDatum" value="${today()}"></div>
+    <button class="btn btn-success btn-block mt-8" onclick="saveZahlung('${id}')">Zahlung buchen</button>
+  `);
+}
+function saveZahlung(id){
+  const r=DB.getById('rechnungen',id);
+  r.bezahltBetrag=parseFloat(document.getElementById('fZahlBetrag').value)||0;
+  r.bezahltAm=document.getElementById('fZahlDatum').value;
+  r.status='bezahlt';
+  DB.save('rechnungen',r);
+  closeModal();showToast('Zahlung gebucht','success');render();
+}
+let rechnungPositionen=[];
+function showRechnungForm(editId){
+  const r=editId?DB.getById('rechnungen',editId):{};
+  rechnungPositionen=r.positionen?JSON.parse(JSON.stringify(r.positionen)):[{pos:1,bezeichnung:'',einheit:'Stk',menge:1,einzelpreis:0}];
+  const kunden=DB.getAll('kunden');
+  const ziel=new Date();ziel.setDate(ziel.getDate()+14);
+  showModal(editId?'Rechnung bearbeiten':'Neue Rechnung',`
+    <div class="form-group"><label>Kunde *</label><select id="fReKunde">${kunden.map(k=>`<option value="${k.id}" ${r.kundeId===k.id?'selected':''}>${k.firma||k.vorname+' '+k.nachname}</option>`).join('')}</select></div>
+    <div class="row-2"><div class="form-group"><label>Leistungsdatum</label><input type="date" id="fReLeistung" value="${r.leistungsdatum||today()}"></div><div class="form-group"><label>Zahlungsziel</label><input type="date" id="fReZiel" value="${r.zahlungsziel||ziel.toISOString().split('T')[0]}"></div></div>
+    <div class="form-group"><label>Positionen</label><div id="rePosContainer"></div>
+    <button class="btn btn-sm mt-8" onclick="addRePos()">+ Position</button></div>
+    <div id="rePosSumme" class="mt-8"></div>
+    <button class="btn btn-primary btn-block mt-12" onclick="saveRechnung('${editId||''}')">Speichern</button>
+  `,true);
+  renderRePos();
+}
+function renderRePos(){
+  const c=document.getElementById('rePosContainer');if(!c)return;
+  c.innerHTML=`<table class="line-items"><thead><tr><th>Pos</th><th>Bezeichnung</th><th>Einheit</th><th class="text-right">Menge</th><th class="text-right">Preis</th><th></th></tr></thead><tbody>
+  ${rechnungPositionen.map((p,i)=>`<tr>
+    <td>${p.pos}</td><td><input value="${p.bezeichnung}" onchange="rechnungPositionen[${i}].bezeichnung=this.value"></td>
+    <td><select onchange="rechnungPositionen[${i}].einheit=this.value">${['Stk','Std','m','m²','psch','Set'].map(e=>`<option ${p.einheit===e?'selected':''}>${e}</option>`).join('')}</select></td>
+    <td><input type="number" step="0.01" value="${p.menge}" onchange="rechnungPositionen[${i}].menge=parseFloat(this.value)||0;updateReSum()"></td>
+    <td><input type="number" step="0.01" value="${p.einzelpreis}" onchange="rechnungPositionen[${i}].einzelpreis=parseFloat(this.value)||0;updateReSum()"></td>
+    <td><button class="btn btn-danger btn-sm" onclick="rechnungPositionen.splice(${i},1);rechnungPositionen.forEach((p,j)=>p.pos=j+1);renderRePos()">×</button></td>
+  </tr>`).join('')}</tbody></table>`;
+  updateReSum();
+}
+function updateReSum(){
+  const s=calcPositionen(rechnungPositionen);
+  const el=document.getElementById('rePosSumme');
+  if(el) el.innerHTML=`<table class="sum-table"><tr><td>Netto</td><td class="text-right">${fmt(s.netto)}</td></tr><tr><td>MwSt 19%</td><td class="text-right">${fmt(s.mwst)}</td></tr><tr class="total"><td><strong>Brutto</strong></td><td class="text-right"><strong>${fmt(s.brutto)}</strong></td></tr></table>`;
+}
+function addRePos(){rechnungPositionen.push({pos:rechnungPositionen.length+1,bezeichnung:'',einheit:'Stk',menge:1,einzelpreis:0});renderRePos();}
+function saveRechnung(editId){
+  if(rechnungPositionen.filter(p=>p.bezeichnung).length===0){showToast('Mindestens eine Position','error');return;}
+  const data=editId?DB.getById('rechnungen',editId):{id:DB.genId('RE'),nummer:DB.nextNr('RE'),status:'erstellt',bezahltAm:null,bezahltBetrag:0};
+  data.kundeId=document.getElementById('fReKunde').value;
+  data.leistungsdatum=document.getElementById('fReLeistung').value;
+  data.zahlungsziel=document.getElementById('fReZiel').value;
+  data.positionen=rechnungPositionen.filter(p=>p.bezeichnung);
+  DB.save('rechnungen',data);
+  closeModal();showToast(editId?'Rechnung aktualisiert':'Rechnung erstellt','success');
+  location.hash='#/rechnungen/'+data.id;render();
+}
+function printRechnung(id){
+  const r=DB.getById('rechnungen',id);const k=DB.getById('kunden',r.kundeId);const s=calcPositionen(r.positionen);const st=DB.settings();
+  const w=window.open('','_blank');
+  w.document.write(`<html><head><title>${r.nummer}</title><style>body{font-family:Arial,sans-serif;padding:20mm;color:#000;font-size:12px}h1{font-size:18px}table{width:100%;border-collapse:collapse;margin:16px 0}th,td{border:1px solid #ccc;padding:6px;text-align:left}th{background:#f0f0f0}.right{text-align:right}.sum{margin-left:auto;width:250px;border:none}.sum td{border:none;padding:4px 8px}.total{font-weight:bold;border-top:2px solid #000!important}.footer{margin-top:32px;font-size:10px;color:#666;border-top:1px solid #ccc;padding-top:8px}</style></head><body>
+  <div style="margin-bottom:24px"><strong>${st.name}</strong><br>${st.strasse}<br>${st.plz} ${st.ort}<br>Tel: ${st.telefon}<br>${st.email}</div>
+  <div style="margin-bottom:24px">${k?`${k.firma?k.firma+'<br>':''}${k.anrede} ${k.vorname} ${k.nachname}<br>${k.strasse}<br>${k.plz} ${k.ort}`:''}</div>
+  <h1>Rechnung ${r.nummer}</h1>
+  <p>Rechnungsdatum: ${fmtD(r.erstellt)} · Leistungsdatum: ${fmtDI(r.leistungsdatum)}<br>Zahlungsziel: ${fmtDI(r.zahlungsziel)} (${st.zahlungsziel} Tage netto)</p>
+  <table><thead><tr><th>Pos</th><th>Bezeichnung</th><th>Einheit</th><th class="right">Menge</th><th class="right">Einzelpreis</th><th class="right">Gesamt</th></tr></thead><tbody>
+  ${r.positionen.map(p=>`<tr><td>${p.pos}</td><td>${p.bezeichnung}</td><td>${p.einheit}</td><td class="right">${fmtN(p.menge)}</td><td class="right">${fmt(p.einzelpreis)}</td><td class="right">${fmt(p.menge*p.einzelpreis)}</td></tr>`).join('')}
+  </tbody></table>
+  <table class="sum"><tr><td>Nettobetrag</td><td class="right">${fmt(s.netto)}</td></tr><tr><td>Umsatzsteuer 19%</td><td class="right">${fmt(s.mwst)}</td></tr><tr class="total"><td>Rechnungsbetrag</td><td class="right">${fmt(s.brutto)}</td></tr></table>
+  <p style="margin-top:24px">Bitte überweisen Sie den Betrag bis zum ${fmtDI(r.zahlungsziel)} auf folgendes Konto:</p>
+  <p><strong>${st.bank}</strong><br>IBAN: ${st.iban}<br>BIC: ${st.bic}</p>
+  <div class="footer">Steuernummer: ${st.steuernr} · USt-IdNr: ${st.ustid}<br>${st.name} · ${st.strasse} · ${st.plz} ${st.ort}</div>
+  </body></html>`);
+  w.document.close();w.print();
+}
+
+/* ===== SECTION 9: MATERIAL ===== */
+function renderMaterial(el){
+  const materials=DB.getAll('material');
+  const categories=[...new Set(materials.map(m=>m.kategorie))].sort();
+  const lowStock=materials.filter(m=>m.bestand<=m.mindestbestand);
+  el.innerHTML=`
+  <h2 class="mb-12">Material & Lager</h2>
+  ${lowStock.length>0?`<div class="card" style="border-color:var(--red2)"><div class="card-title" style="color:var(--red2)">Nachbestellung nötig (${lowStock.length})</div>
+    ${lowStock.map(m=>`<div class="list-item"><div class="list-item-main"><div class="list-item-title">${m.bezeichnung}</div><div class="list-item-sub">Bestand: ${m.bestand} ${m.einheit} · Mindest: ${m.mindestbestand}</div></div><span class="badge badge-red">Niedrig</span></div>`).join('')}
+  </div>`:''}
+  <div class="filter-chips">
+    <span class="chip active" onclick="filterMaterialKat(this,'alle')">Alle</span>
+    ${categories.map(c=>`<span class="chip" onclick="filterMaterialKat(this,'${c}')">${c}</span>`).join('')}
+  </div>
+  <div class="search-bar"><input id="searchMat" placeholder="Material suchen..." oninput="filterMat()"></div>
+  <div class="card" id="materialListe">
+    <table><thead><tr><th>Art.-Nr.</th><th>Bezeichnung</th><th>Kategorie</th><th class="text-right">Bestand</th><th class="text-right">VK-Preis</th></tr></thead><tbody>
+    ${materials.map(m=>`<tr data-kat="${m.kategorie}" data-search="${(m.bezeichnung+m.artikelNr).toLowerCase()}" onclick="showMaterialDetail('${m.id}')" style="cursor:pointer">
+      <td>${m.artikelNr}</td><td>${m.bezeichnung}</td><td>${m.kategorie}</td>
+      <td class="text-right"><span class="badge ${m.bestand<=m.mindestbestand?'badge-red':'badge-green'}">${m.bestand} ${m.einheit}</span></td>
+      <td class="text-right">${m.verkaufspreis>0?fmt(m.verkaufspreis):'-'}</td>
+    </tr>`).join('')}
+    </tbody></table>
+  </div>
+  ${canAccess(['GF','BU'])?`<button class="fab" onclick="showMaterialForm()">+</button>`:''}`;
+}
+function filterMaterialKat(chip,kat){
+  document.querySelectorAll('.filter-chips .chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  document.querySelectorAll('#materialListe tbody tr').forEach(tr=>{
+    tr.style.display=kat==='alle'||tr.dataset.kat===kat?'':'none';
+  });
+}
+function filterMat(){
+  const q=document.getElementById('searchMat').value.toLowerCase();
+  document.querySelectorAll('#materialListe tbody tr').forEach(tr=>{
+    tr.style.display=tr.dataset.search.includes(q)?'':'none';
+  });
+}
+function showMaterialDetail(id){
+  const m=DB.getById('material',id);
+  const usage=DB.getAll('materialUsage').filter(u=>u.materialId===id);
+  showModal(m.bezeichnung,`
+    <div class="row-2 mb-8"><div><label>Art.-Nr.</label><div>${m.artikelNr}</div></div><div><label>Kategorie</label><div>${m.kategorie}</div></div></div>
+    <div class="row-2 mb-8"><div><label>EK-Preis</label><div>${fmt(m.einkaufspreis)}</div></div><div><label>VK-Preis</label><div>${m.verkaufspreis>0?fmt(m.verkaufspreis):'-'}</div></div></div>
+    <div class="row-2 mb-8"><div><label>Bestand</label><div><span class="badge ${m.bestand<=m.mindestbestand?'badge-red':'badge-green'}">${m.bestand} ${m.einheit}</span></div></div><div><label>Mindestbestand</label><div>${m.mindestbestand} ${m.einheit}</div></div></div>
+    <div class="mb-8"><label>Lieferant</label><div>${m.lieferant||'-'}</div></div>
+    ${canAccess(['GF','BU'])?`<div class="btn-group mt-8">
+      <button class="btn btn-success btn-sm" onclick="closeModal();showStockForm('${id}','zugang')">Zugang buchen</button>
+      <button class="btn btn-danger btn-sm" onclick="closeModal();showStockForm('${id}','abgang')">Abgang buchen</button>
+      <button class="btn btn-sm" onclick="closeModal();showMaterialForm('${id}')">Bearbeiten</button>
+    </div>`:''}
+    ${usage.length>0?`<div class="mt-12"><label>Verbrauchshistorie</label><table><thead><tr><th>Datum</th><th>Auftrag</th><th>Menge</th><th>Mitarbeiter</th></tr></thead><tbody>
+      ${usage.map(u=>`<tr><td>${fmtD(u.datum)}</td><td>${DB.getById('auftraege',u.auftragId)?.nummer||'-'}</td><td>${u.menge}</td><td>${empName(u.mitarbeiterId)}</td></tr>`).join('')}
+    </tbody></table></div>`:''}
+  `);
+}
+function showStockForm(id,typ){
+  showModal(typ==='zugang'?'Zugang buchen':'Abgang buchen',`
+    <div class="form-group"><label>Menge</label><input type="number" id="fStockMenge" value="1" min="1"></div>
+    <button class="btn ${typ==='zugang'?'btn-success':'btn-danger'} btn-block mt-8" onclick="saveStock('${id}','${typ}')">Buchen</button>
+  `);
+}
+function saveStock(id,typ){
+  const m=DB.getById('material',id);
+  const menge=parseInt(document.getElementById('fStockMenge').value)||0;
+  if(menge<=0){showToast('Ungültige Menge','error');return;}
+  if(typ==='zugang') m.bestand+=menge; else{if(m.bestand<menge){showToast('Nicht genug auf Lager','error');return;}m.bestand-=menge;}
+  DB.save('material',m);
+  closeModal();showToast(`${menge} ${m.einheit} ${typ==='zugang'?'hinzugefügt':'entnommen'}`,'success');render();
+}
+function showMaterialForm(editId){
+  const m=editId?DB.getById('material',editId):{};
+  showModal(editId?'Material bearbeiten':'Neues Material',`
+    <div class="row-2"><div class="form-group"><label>Art.-Nr. *</label><input id="fMtNr" value="${m.artikelNr||''}"></div><div class="form-group"><label>Kategorie</label><select id="fMtKat">${['Heizkessel','Rohre','Armaturen','Pumpen','Regelung','Werkzeug','Verbrauchsmaterial'].map(k=>`<option ${m.kategorie===k?'selected':''}>${k}</option>`).join('')}</select></div></div>
+    <div class="form-group"><label>Bezeichnung *</label><input id="fMtBez" value="${m.bezeichnung||''}"></div>
+    <div class="row-2"><div class="form-group"><label>Einheit</label><select id="fMtEin">${['Stk','Set','Rolle','m','L','kg'].map(e=>`<option ${m.einheit===e?'selected':''}>${e}</option>`).join('')}</select></div><div class="form-group"><label>Lieferant</label><input id="fMtLief" value="${m.lieferant||''}"></div></div>
+    <div class="row-2"><div class="form-group"><label>EK-Preis</label><input type="number" step="0.01" id="fMtEK" value="${m.einkaufspreis||0}"></div><div class="form-group"><label>VK-Preis</label><input type="number" step="0.01" id="fMtVK" value="${m.verkaufspreis||0}"></div></div>
+    <div class="row-2"><div class="form-group"><label>Bestand</label><input type="number" id="fMtBest" value="${m.bestand||0}"></div><div class="form-group"><label>Mindestbestand</label><input type="number" id="fMtMin" value="${m.mindestbestand||0}"></div></div>
+    <button class="btn btn-primary btn-block mt-12" onclick="saveMaterial('${editId||''}')">Speichern</button>
+  `);
+}
+function saveMaterial(editId){
+  const bez=document.getElementById('fMtBez').value.trim();
+  if(!bez){showToast('Bezeichnung ist erforderlich','error');return;}
+  const data=editId?DB.getById('material',editId):{id:DB.genId('MT')};
+  data.artikelNr=document.getElementById('fMtNr').value;data.kategorie=document.getElementById('fMtKat').value;
+  data.bezeichnung=bez;data.einheit=document.getElementById('fMtEin').value;data.lieferant=document.getElementById('fMtLief').value;
+  data.einkaufspreis=parseFloat(document.getElementById('fMtEK').value)||0;data.verkaufspreis=parseFloat(document.getElementById('fMtVK').value)||0;
+  data.bestand=parseInt(document.getElementById('fMtBest').value)||0;data.mindestbestand=parseInt(document.getElementById('fMtMin').value)||0;
+  DB.save('material',data);closeModal();showToast('Material gespeichert','success');render();
+}
+
+/* ===== SECTION 10: PERSONAL ===== */
+function renderPersonal(el){
+  const mitarbeiter=DB.getAll('mitarbeiter');
+  const groups={GF:mitarbeiter.filter(m=>m.rolle==='GF'),BU:mitarbeiter.filter(m=>m.rolle==='BU'),MO:mitarbeiter.filter(m=>m.rolle==='MO')};
+  el.innerHTML=`
+  <h2 class="mb-12">Personal</h2>
+  ${['GF','BU','MO'].map(rolle=>`
+    <div class="card"><div class="card-title">${rolleLabel(rolle)} (${groups[rolle].length})</div>
+      ${groups[rolle].map(m=>{
+        const urlaubGenommen=DB.getAll('urlaub').filter(u=>u.mitarbeiterId===m.id&&u.typ==='urlaub'&&u.status==='genehmigt'&&new Date(u.von).getFullYear()===new Date().getFullYear()).reduce((s,u)=>{const d=(new Date(u.bis)-new Date(u.von))/(86400000)+1;return s+d;},0);
+        return`<div class="list-item" onclick="showPersonalDetail('${m.id}')">
+          <div class="list-item-main">
+            <div class="list-item-title">${m.vorname} ${m.nachname}</div>
+            <div class="list-item-sub">${m.nr} · ${m.telefon} · Urlaub: ${urlaubGenommen}/${m.urlaubTage} Tage</div>
+          </div>
+          <span class="badge ${m.aktiv?'badge-green':'badge-red'}">${m.aktiv?'Aktiv':'Inaktiv'}</span>
+        </div>`;}).join('')}
+    </div>`).join('')}`;
+}
+function showPersonalDetail(id){
+  const m=DB.getById('mitarbeiter',id);
+  const zeitLogs=DB.getAll('zeitlog').filter(z=>z.mitarbeiterId===id&&z.typ==='arbeit'&&z.dauer);
+  const totalStunden=zeitLogs.reduce((s,z)=>s+z.dauer,0)/3600000;
+  const urlaube=DB.getAll('urlaub').filter(u=>u.mitarbeiterId===id).sort((a,b)=>new Date(b.von)-new Date(a.von));
+  const jahr=new Date().getFullYear();
+  const urlaubGenommen=urlaube.filter(u=>u.typ==='urlaub'&&u.status==='genehmigt'&&new Date(u.von).getFullYear()===jahr).reduce((s,u)=>{return s+(new Date(u.bis)-new Date(u.von))/(86400000)+1;},0);
+  const krankTage=urlaube.filter(u=>u.typ==='krank'&&new Date(u.von).getFullYear()===jahr).reduce((s,u)=>{return s+(new Date(u.bis)-new Date(u.von))/(86400000)+1;},0);
+
+  showModal(m.vorname+' '+m.nachname,`
+    <div class="row-2 mb-8"><div><label>Personalnr.</label><div>${m.nr}</div></div><div><label>Rolle</label><div>${rolleLabel(m.rolle)}</div></div></div>
+    <div class="row-2 mb-8"><div><label>Telefon</label><div>${m.telefon}</div></div><div><label>E-Mail</label><div>${m.email||'-'}</div></div></div>
+    <div class="mb-8"><label>Qualifikationen</label><div class="btn-group">${(m.qualifikationen||[]).map(q=>`<span class="badge badge-blue">${q}</span>`).join('')}</div></div>
+    <div class="row-3 mb-12">
+      <div class="kpi-card"><div class="kpi-value" style="font-size:16px">${Math.round(totalStunden)}h</div><div class="kpi-label">Arbeitsstunden</div></div>
+      <div class="kpi-card"><div class="kpi-value" style="font-size:16px">${urlaubGenommen}/${m.urlaubTage}</div><div class="kpi-label">Urlaub ${jahr}</div></div>
+      <div class="kpi-card"><div class="kpi-value" style="font-size:16px">${krankTage}</div><div class="kpi-label">Krankheitstage</div></div>
+    </div>
+    ${canAccess(['GF'])?`<div class="btn-group mb-12"><button class="btn btn-sm" onclick="closeModal();showUrlaubForm('${id}')">Urlaub/Krank erfassen</button></div>`:''}
+    ${urlaube.length>0?`<div><label>Abwesenheiten</label><table><thead><tr><th>Von</th><th>Bis</th><th>Typ</th><th>Status</th></tr></thead><tbody>
+      ${urlaube.map(u=>`<tr><td>${fmtDI(u.von)}</td><td>${fmtDI(u.bis)}</td><td>${u.typ==='urlaub'?'Urlaub':'Krank'}</td><td>${u.status==='genehmigt'?'<span class="badge badge-green">Genehmigt</span>':u.status==='abgelehnt'?'<span class="badge badge-red">Abgelehnt</span>':'<span class="badge badge-gray">Offen</span>'}</td></tr>`).join('')}
+    </tbody></table></div>`:''}
+  `,true);
+}
+function showUrlaubForm(mitarbeiterId){
+  showModal('Abwesenheit erfassen',`
+    <div class="form-group"><label>Typ</label><select id="fUrlTyp"><option value="urlaub">Urlaub</option><option value="krank">Krank</option></select></div>
+    <div class="row-2"><div class="form-group"><label>Von</label><input type="date" id="fUrlVon" value="${today()}"></div><div class="form-group"><label>Bis</label><input type="date" id="fUrlBis" value="${today()}"></div></div>
+    <button class="btn btn-primary btn-block mt-8" onclick="saveUrlaub('${mitarbeiterId}')">Speichern</button>
+  `);
+}
+function saveUrlaub(mitarbeiterId){
+  const typ=document.getElementById('fUrlTyp').value;
+  const von=document.getElementById('fUrlVon').value;
+  const bis=document.getElementById('fUrlBis').value;
+  if(!von||!bis||new Date(bis)<new Date(von)){showToast('Ungültiger Zeitraum','error');return;}
+  DB.save('urlaub',{id:DB.genId('UR'),mitarbeiterId,typ,von,bis,status:typ==='krank'?'genehmigt':'genehmigt'});
+  closeModal();showToast('Abwesenheit gespeichert','success');render();
+}
+
+/* ===== SECTION 11: BERICHTE ===== */
+function renderBerichte(el){
+  el.innerHTML=`
+  <h2 class="mb-12">Berichte</h2>
+  <div class="card"><div class="card-title">Umsatzübersicht</div><div id="chartUmsatz"></div></div>
+  <div class="card"><div class="card-title">Offene Posten</div><div id="reportOP"></div></div>
+  <div class="card"><div class="card-title">Mitarbeiter-Auslastung</div><div id="reportAuslastung"></div></div>
+  <div class="card"><div class="card-title">Projekt-Rentabilität</div><div id="reportProjekte"></div></div>
+  <div class="btn-group mt-8"><button class="btn btn-sm" onclick="exportBerichtCSV()">CSV Export (Rechnungen)</button></div>`;
+  renderUmsatzChart();renderOffenePosten();renderAuslastung();renderProjektRent();
+}
+function renderUmsatzChart(){
+  const rechnungen=DB.getAll('rechnungen').filter(r=>r.status==='bezahlt');
+  const monate={};
+  for(let i=5;i>=0;i--){
+    const d=new Date();d.setMonth(d.getMonth()-i);
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const label=d.toLocaleString('de-DE',{month:'short',year:'2-digit'});
+    monate[key]={label,summe:0};
+  }
+  rechnungen.forEach(r=>{
+    if(!r.bezahltAm)return;
+    const d=new Date(r.bezahltAm);
+    const key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    if(monate[key]) monate[key].summe+=calcPositionen(r.positionen).brutto;
+  });
+  const vals=Object.values(monate);
+  const max=Math.max(...vals.map(v=>v.summe),1);
+  document.getElementById('chartUmsatz').innerHTML=`
+    <div class="chart-bar-container">
+      ${vals.map(v=>`<div class="chart-bar" style="height:${Math.max((v.summe/max)*100,2)}%">
+        <span class="chart-bar-value">${v.summe>0?fmt(v.summe):''}</span>
+        <span class="chart-bar-label">${v.label}</span>
+      </div>`).join('')}
+    </div>`;
+}
+function renderOffenePosten(){
+  const rechnungen=DB.getAll('rechnungen').filter(r=>r.status==='versendet'||r.status==='ueberfaellig');
+  const now=Date.now();
+  const buckets={'0-30':[],'31-60':[],'61-90':[],'90+':[]};
+  rechnungen.forEach(r=>{
+    const age=Math.floor((now-r.erstellt)/86400000);
+    if(age<=30) buckets['0-30'].push(r);
+    else if(age<=60) buckets['31-60'].push(r);
+    else if(age<=90) buckets['61-90'].push(r);
+    else buckets['90+'].push(r);
+  });
+  const el=document.getElementById('reportOP');
+  el.innerHTML=`<table><thead><tr><th>Alter</th><th class="text-right">Anzahl</th><th class="text-right">Summe</th></tr></thead><tbody>
+    ${Object.entries(buckets).map(([k,v])=>`<tr><td>${k} Tage</td><td class="text-right">${v.length}</td><td class="text-right">${fmt(v.reduce((s,r)=>s+calcPositionen(r.positionen).brutto,0))}</td></tr>`).join('')}
+    <tr style="font-weight:bold"><td>Gesamt</td><td class="text-right">${rechnungen.length}</td><td class="text-right">${fmt(rechnungen.reduce((s,r)=>s+calcPositionen(r.positionen).brutto,0))}</td></tr>
+  </tbody></table>`;
+}
+function renderAuslastung(){
+  const monteure=DB.getAll('mitarbeiter').filter(m=>m.rolle==='MO'&&m.aktiv);
+  const monat=new Date().getMonth();const jahr=new Date().getFullYear();
+  const el=document.getElementById('reportAuslastung');
+  const arbeitsTageMonat=22;const sollStunden=arbeitsTageMonat*8;
+  el.innerHTML=`<table><thead><tr><th>Mitarbeiter</th><th class="text-right">Ist-Stunden</th><th class="text-right">Soll</th><th class="text-right">Auslastung</th></tr></thead><tbody>
+    ${monteure.map(m=>{
+      const stunden=DB.getAll('zeitlog').filter(z=>z.mitarbeiterId===m.id&&z.typ==='arbeit'&&z.dauer&&new Date(z.start).getMonth()===monat&&new Date(z.start).getFullYear()===jahr).reduce((s,z)=>s+z.dauer,0)/3600000;
+      const auslastung=sollStunden>0?Math.round(stunden/sollStunden*100):0;
+      return`<tr><td>${m.vorname} ${m.nachname}</td><td class="text-right">${Math.round(stunden)}h</td><td class="text-right">${sollStunden}h</td><td class="text-right"><span class="badge ${auslastung>=80?'badge-green':auslastung>=50?'badge-orange':'badge-red'}">${auslastung}%</span></td></tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
+function renderProjektRent(){
+  const projekte=DB.getAll('projekte');
+  const el=document.getElementById('reportProjekte');
+  const st=DB.settings();
+  el.innerHTML=`<table><thead><tr><th>Projekt</th><th class="text-right">Umsatz</th><th class="text-right">Lohnkosten</th><th class="text-right">Material</th><th class="text-right">Gewinn</th></tr></thead><tbody>
+    ${projekte.map(p=>{
+      const auftraege=DB.getAll('auftraege').filter(a=>a.projektId===p.id);
+      const auftragIds=auftraege.map(a=>a.id);
+      const umsatz=DB.getAll('rechnungen').filter(r=>r.status==='bezahlt'&&auftragIds.includes(r.auftragId)).reduce((s,r)=>s+calcPositionen(r.positionen).brutto,0);
+      const stunden=DB.getAll('zeitlog').filter(z=>z.typ==='arbeit'&&z.dauer&&auftragIds.includes(z.auftragId)).reduce((s,z)=>s+z.dauer,0)/3600000;
+      const lohnkosten=stunden*st.stundensatz;
+      const matKosten=DB.getAll('materialUsage').filter(u=>auftragIds.includes(u.auftragId)).reduce((s,u)=>{const m=DB.getById('material',u.materialId);return s+u.menge*(m?.einkaufspreis||0);},0);
+      const gewinn=umsatz-lohnkosten-matKosten;
+      return`<tr><td>${p.name}</td><td class="text-right">${fmt(umsatz)}</td><td class="text-right">${fmt(lohnkosten)}</td><td class="text-right">${fmt(matKosten)}</td><td class="text-right" style="color:${gewinn>=0?'var(--green2)':'var(--red2)'}">${fmt(gewinn)}</td></tr>`;
+    }).join('')}
+  </tbody></table>`;
+}
+function exportBerichtCSV(){
+  const rechnungen=DB.getAll('rechnungen');
+  const csv=['Nummer;Kunde;Status;Netto;MwSt;Brutto;Zahlungsziel;Bezahlt',...rechnungen.map(r=>{const s=calcPositionen(r.positionen);return`${r.nummer};${kundeName(r.kundeId)};${r.status};${fmtN(s.netto)};${fmtN(s.mwst)};${fmtN(s.brutto)};${r.zahlungsziel||''};${r.bezahltAm||''}`;})].join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='rechnungen-export.csv';a.click();URL.revokeObjectURL(a.href);
+  showToast('CSV exportiert','success');
+}
+
+/* ===== SECTION 12: EINSTELLUNGEN ===== */
+function renderEinstellungen(el){
+  const st=DB.settings();
+  el.innerHTML=`
+  <h2 class="mb-12">Einstellungen</h2>
+  <div class="card"><div class="card-title">Firmendaten</div>
+    <div class="form-group"><label>Firmenname</label><input id="sName" value="${st.name}"></div>
+    <div class="row-2"><div class="form-group"><label>Straße</label><input id="sStr" value="${st.strasse}"></div><div class="row-2"><div class="form-group"><label>PLZ</label><input id="sPlz" value="${st.plz}"></div><div class="form-group"><label>Ort</label><input id="sOrt" value="${st.ort}"></div></div></div>
+    <div class="row-2"><div class="form-group"><label>Telefon</label><input id="sTel" value="${st.telefon}"></div><div class="form-group"><label>E-Mail</label><input id="sEmail" value="${st.email}"></div></div>
+    <div class="row-2"><div class="form-group"><label>Steuernummer</label><input id="sStNr" value="${st.steuernr}"></div><div class="form-group"><label>USt-IdNr</label><input id="sUst" value="${st.ustid}"></div></div>
+    <div class="form-group"><label>Bank</label><input id="sBank" value="${st.bank}"></div>
+    <div class="row-2"><div class="form-group"><label>IBAN</label><input id="sIban" value="${st.iban}"></div><div class="form-group"><label>BIC</label><input id="sBic" value="${st.bic}"></div></div>
+    <div class="row-2"><div class="form-group"><label>Stundensatz (€)</label><input type="number" id="sStd" value="${st.stundensatz}"></div><div class="form-group"><label>Zahlungsziel (Tage)</label><input type="number" id="sZiel" value="${st.zahlungsziel}"></div></div>
+    <button class="btn btn-primary mt-8" onclick="saveSettings()">Speichern</button>
+  </div>
+  <div class="card"><div class="card-title">Datensicherung</div>
+    <div class="btn-group">
+      <button class="btn btn-success btn-sm" onclick="exportBackup()">Backup (JSON Export)</button>
+      <button class="btn btn-sm" onclick="document.getElementById('importFile').click()">Wiederherstellen</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importBackup(event)">
+    </div>
+  </div>
+  <div class="card"><div class="card-title" style="color:var(--red2)">Gefahrenzone</div>
+    <button class="btn btn-danger btn-sm" onclick="resetData()">Alle Daten zurücksetzen</button>
+  </div>`;
+}
+function saveSettings(){
+  const st={name:document.getElementById('sName').value,strasse:document.getElementById('sStr').value,plz:document.getElementById('sPlz').value,ort:document.getElementById('sOrt').value,telefon:document.getElementById('sTel').value,email:document.getElementById('sEmail').value,steuernr:document.getElementById('sStNr').value,ustid:document.getElementById('sUst').value,bank:document.getElementById('sBank').value,iban:document.getElementById('sIban').value,bic:document.getElementById('sBic').value,stundensatz:parseFloat(document.getElementById('sStd').value)||65,zahlungsziel:parseInt(document.getElementById('sZiel').value)||14};
+  DB.settings(st);showToast('Einstellungen gespeichert','success');
+}
+function exportBackup(){
+  const data={};
+  ['mitarbeiter','kunden','projekte','auftraege','angebote','rechnungen','material','materialUsage','zeitlog','urlaub'].forEach(k=>{data[k]=DB.getAll(k);});
+  data.counters=DB._gs('counters');data.settings=DB.settings();data.exportDatum=new Date().toISOString();
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='shk-erp-backup-'+today()+'.json';a.click();
+  showToast('Backup erstellt','success');
+}
+function importBackup(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    showConfirm('Alle aktuellen Daten werden überschrieben. Fortfahren?',()=>{
+      try{
+        const data=JSON.parse(e.target.result);
+        ['mitarbeiter','kunden','projekte','auftraege','angebote','rechnungen','material','materialUsage','zeitlog','urlaub'].forEach(k=>{if(data[k])DB._s(k,data[k]);});
+        if(data.counters)DB._ss('counters',data.counters);
+        if(data.settings)DB._ss('settings',data.settings);
+        showToast('Daten wiederhergestellt','success');render();
+      }catch(err){showToast('Ungültige Datei','error');}
+    });
+  };
+  reader.readAsText(file);
+}
+function resetData(){
+  showConfirm('ALLE Daten werden unwiderruflich gelöscht! Wirklich fortfahren?',()=>{
+    ['mitarbeiter','kunden','projekte','auftraege','angebote','rechnungen','material','materialUsage','zeitlog','urlaub'].forEach(k=>localStorage.removeItem('erp_'+k));
+    localStorage.removeItem('erp_counters');localStorage.removeItem('erp_settings');localStorage.removeItem('erp_session');localStorage.removeItem('erp_seeded');
+    currentUser=null;DB.seed();showToast('Daten zurückgesetzt','success');location.hash='#/login';render();
+  });
+}
+
+/* ===== SECTION 13: MORE MENU & INIT ===== */
+document.addEventListener('click',e=>{
+  const moreBtn=e.target.closest('.bottom-nav a[title="Mehr"]');
+  if(moreBtn){
+    e.preventDefault();
+    const items=getNavItems();
+    const more=items.find(i=>i.onclick);
+    if(!more||!more.moreItems)return;
+    showModal('Weitere Module',`
+      ${more.moreItems.map(m=>`<div class="list-item" onclick="closeModal();location.hash='${m.hash}'">
+        <div class="list-item-main"><div class="list-item-title">${m.label}</div></div>
+      </div>`).join('')}
+    `);
+    return;
+  }
+});
+
+/* ===== PWA SERVICE WORKER ===== */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+/* ===== APP INIT ===== */
+DB.seed();
+const savedSession=getSession();
+if(savedSession){
+  if(!location.hash||location.hash==='#/'||location.hash==='#/login') location.hash='#/dashboard';
+  render();
+} else {
+  location.hash='#/login';
+  render();
+}
+</script>
+</body>
+</html>
